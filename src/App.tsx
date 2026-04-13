@@ -36,7 +36,7 @@ function SiteFooter() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <NavBar />
         <Routes>
           <Route index element={<HomePage />} />
