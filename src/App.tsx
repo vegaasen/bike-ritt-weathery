@@ -2,14 +2,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HomePage } from "./pages/HomePage";
 import { RittPage } from "./pages/RittPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 import { NavBar } from "./components/NavBar";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
 function SiteFooter() {
   return (
     <footer className="site-footer">
-      <span>Rittvær — værmeldinger for norske sykkelritt</span>
+      <span>Startstreken — værmeldinger for norske sykkelritt</span>
       <span>
         Data:{" "}
         <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">
@@ -35,16 +37,19 @@ function SiteFooter() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <NavBar />
-        <Routes>
-          <Route index element={<HomePage />} />
-          <Route path="/ritt/:id" element={<RittPage />} />
-        </Routes>
-        <SiteFooter />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <NavBar />
+          <Routes>
+            <Route index element={<HomePage />} />
+            <Route path="/ritt/:id" element={<RittPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+          <SiteFooter />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

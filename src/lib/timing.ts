@@ -49,3 +49,27 @@ export function formatArrivalTime(datetime: string): string {
  * layout used in all ritt.
  */
 export const WAYPOINT_FRACTIONS = [0, 0.25, 0.5, 0.75, 1.0] as const;
+
+/**
+ * Given a start time ("HH:MM") and a distance + average speed, computes
+ * the predicted finish time ("HH:MM").
+ *
+ * @param startTime  "HH:MM"
+ * @param distanceKm Total race distance in km
+ * @param speedKmh   Average speed in km/h
+ * @returns "HH:MM" — clamped to 23:59 if the ride goes past midnight
+ */
+export function calcFinishTimeFromSpeed(
+  startTime: string,
+  distanceKm: number,
+  speedKmh: number
+): string {
+  const [startH, startM] = startTime.split(":").map(Number);
+  const startMinutes = startH * 60 + (startM ?? 0);
+  const durationMinutes = Math.round((distanceKm / speedKmh) * 60);
+  const finishMinutes = Math.min(startMinutes + durationMinutes, 23 * 60 + 59);
+
+  const h = Math.floor(finishMinutes / 60);
+  const m = finishMinutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}

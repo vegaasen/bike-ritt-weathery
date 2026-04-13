@@ -1,6 +1,6 @@
-# Rittvær 🚴
+# Startstreken 🚴
 
-**Sjekk været langs ruten for norske sykkelritt.**
+**Sjekk været langs ruten for norske sykkelritt og langrenn.**
 
 Pick a Norwegian cycling race, choose a date, and get weather conditions at ~5 key points along the route — from start to finish. Uses live forecasts when the date is close, and 10-year historical climate averages when planning further ahead.
 
@@ -86,19 +86,19 @@ src/
 
 ### v1 polish
 
-- [ ] **Design system** — pick and integrate a component library (e.g. shadcn/ui, Radix + Tailwind); replace bare HTML with styled components
-- [ ] **Responsive layout** — WeatherStrip scrolls horizontally on mobile; HomePage grid collapses to single column
-- [ ] **Loading skeletons** — replace plain "Laster..." text with skeleton cards during fetch
-- [ ] **Error boundary** — graceful fallback if Open-Meteo is unreachable
-- [ ] **Page titles** — set `<title>` per route (e.g. "Birkebeinerrittet – Rittvær")
-- [ ] **404 page** — not-found route for unknown ritt IDs and unknown paths
+- [ ] **Design system** — pick and integrate a component library (e.g. shadcn/ui, Radix + Tailwind, [Designsystemet](https://www.designsystemet.no/)); replace bare HTML with styled components
+- [x] **Responsive layout** — WeatherStrip gets scroll-snap + fade-mask hint on mobile; HomePage grid already collapses to single column via `minmax(240px, 1fr)`
+- [x] **Loading skeletons** — shimmer skeleton shapes (icon + text lines) replace plain "Laster..." text in WeatherCard
+- [x] **Error boundary** — `ErrorBoundary` class component at app root + around WeatherStrip in RittPage; "Prøv igjen" retry button
+- [x] **Page titles** — `usePageTitle` hook sets `<title>` per route ("Birkebeinerrittet – Rittvær", "Siden finnes ikke – Rittvær", etc.)
+- [x] **404 page** — catch-all `<Route path="*">` renders `NotFoundPage`; data-level guard in RittPage also uses page title
 
 ### v2 features
 
 - [ ] **Map view** — Leaflet map with waypoint pins on the ritt detail page
 - [ ] **GPX upload** — derive waypoints automatically from a GPX file
 - [x] **More ritt** — expanded to 18; sync with [sykling.no terminliste](https://sykling.no/sykkelritt/terminliste/) each season
-- [ ] **Langrenn** — add cross-country ski races (e.g. Birkebeinerrennet, Holmenkollmarsjen) with a `type` field in the data model
+- [ ] **Langrenn** — add cross-country ski races (e.g. Birkebeinerrennet, Holmenkollmarsjen) with a `type` field in the data model; add relative humidity (`relative_humidity_2m`) to API calls; show humidity in WeatherCard for ski disciplines
 - [ ] **Copy link button** — explicit share button alongside the existing URL-based state
 - [ ] **Comparison mode** — show official date vs custom date side by side
 - [ ] **Hourly breakdown** — expand a waypoint card to show hour-by-hour forecast

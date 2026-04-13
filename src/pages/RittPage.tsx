@@ -5,8 +5,13 @@ import { TimePicker } from "../components/TimePicker";
 import { WeatherStrip } from "../components/WeatherStrip";
 import { RittMap } from "../components/RittMap";
 import { HistoricalWeatherTable } from "../components/HistoricalWeatherTable";
+import { GearSuggestion } from "../components/GearSuggestion";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { computeElevationGain } from "../lib/ritt";
 import { useMyRitt } from "../hooks/useMyRitt";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { useWeather } from "../hooks/useWeather";
+import { calcWaypointTimes, WAYPOINT_FRACTIONS } from "../lib/timing";
 import ritt from "../data/ritt.json";
 
 export function RittPage() {
@@ -15,6 +20,8 @@ export function RittPage() {
   const { isPlanned, getPlanned, add, remove } = useMyRitt();
 
   const rittData = ritt.find((r) => r.id === id);
+
+  usePageTitle(rittData ? `${rittData.name} – Startstreken` : "Fant ikke ritt – Startstreken");
 
   // Restore saved planned entry when there are no URL params
   const savedEntry = id ? getPlanned(id) : undefined;
@@ -49,6 +56,22 @@ export function RittPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, startTime, finishTime]);
+
+  const timingActive =
+    selectedDate !== "" &&
+    startTime !== "" &&
+    finishTime !== "";
+
+  const datetimes = timingActive
+    ? calcWaypointTimes(selectedDate, startTime, finishTime, [...WAYPOINT_FRACTIONS])
+    : null;
+
+  // useWeather shares query keys with WeatherStrip — TanStack Query deduplicates the fetches
+  const weatherResults = useWeather(
+    rittData ? rittData.waypoints : [],
+    selectedDate || null,
+    datetimes
+  );
 
   if (!rittData) {
     return (
@@ -130,16 +153,31 @@ export function RittPage() {
             setStartTime("");
             setFinishTime("");
           }}
+          distanceKm={rittData.distance}
         />
       </section>
 
       <section className="ritt-page__weather-section">
-        <WeatherStrip
-          waypoints={rittData.waypoints}
-          date={selectedDate || null}
-          startTime={startTime || null}
-          finishTime={finishTime || null}
-        />
+        <ErrorBoundary
+          fallback={
+            <p className="error-boundary__message">
+              Kunne ikke laste værmeldingen. Sjekk nettverkstilkoblingen og prøv igjen.
+            </p>
+          }
+        >
+          <WeatherStrip
+            waypoints={rittData.waypoints}
+            date={selectedDate || null}
+            startTime={startTime || null}
+            finishTime={finishTime || null}
+          />
+          {selectedDate && (
+            <GearSuggestion
+              results={weatherResults}
+              waypoints={rittData.waypoints}
+            />
+          )}
+        </ErrorBoundary>
       </section>
 
       <section className="ritt-page__history-section">

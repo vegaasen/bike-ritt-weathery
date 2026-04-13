@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RittCard } from "../components/RittCard";
 import { useMyRitt } from "../hooks/useMyRitt";
+import { usePageTitle } from "../hooks/usePageTitle";
 import ritt from "../data/ritt.json";
 
 type Race = (typeof ritt)[number];
@@ -34,6 +35,7 @@ const DISCIPLINE_LABELS: Record<Discipline, string> = {
 };
 
 export function HomePage() {
+  usePageTitle("Rittvær");
   const { plannedIds, isPlanned, getPlanned, add, remove } = useMyRitt();
   const [discipline, setDiscipline] = useState<Discipline>("alle");
 

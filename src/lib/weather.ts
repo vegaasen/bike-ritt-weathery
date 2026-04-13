@@ -11,24 +11,34 @@ export type WeatherData = {
   source: "forecast" | "climate-average";
   tempMax: number;
   tempMin: number;
+  /** Apparent (feels-like) temperature max for the day */
+  feelsLikeMax?: number;
+  /** Apparent (feels-like) temperature min for the day */
+  feelsLikeMin?: number;
   precipitation: number;
   windSpeed: number;
+  /** Wind direction in degrees (0–360, meteorological). Present for both daily and hourly. */
+  windDirection?: number;
   weatherCode: number;
   /** 0–100 %. Only present for forecast data; archive API does not provide this. */
   precipitationProbability?: number;
   /** Present when fetched for a specific hour (hourly mode) */
   hourlyTemp?: number;
+  /** Apparent temperature for the specific arrival hour */
+  hourlyFeelsLike?: number;
   hourlyPrecipitation?: number;
   hourlyWindSpeed?: number;
+  /** Wind direction degrees for the specific arrival hour */
+  hourlyWindDirection?: number;
 };
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive";
 
 const DAILY_PARAMS =
-  "temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weather_code";
+  "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant,weather_code";
 
-const HOURLY_PARAMS = "temperature_2m,precipitation,wind_speed_10m,weather_code";
+const HOURLY_PARAMS = "temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,weather_code";
 
 /** Parses "YYYY-MM-DDTHH:00" into { date: "YYYY-MM-DD", hour: number } */
 function parseDatetime(datetime: string): { date: string; hour: number } {
@@ -69,8 +79,11 @@ export async function fetchForecastWeather(
     source: "forecast",
     tempMax: d.temperature_2m_max[0],
     tempMin: d.temperature_2m_min[0],
+    feelsLikeMax: d.apparent_temperature_max?.[0] ?? undefined,
+    feelsLikeMin: d.apparent_temperature_min?.[0] ?? undefined,
     precipitation: d.precipitation_sum[0] ?? 0,
     windSpeed: d.wind_speed_10m_max[0] ?? 0,
+    windDirection: d.wind_direction_10m_dominant?.[0] ?? undefined,
     weatherCode: d.weather_code[0] ?? 0,
     precipitationProbability: d.precipitation_probability_max?.[0] ?? undefined,
   };
@@ -148,8 +161,11 @@ export async function fetchClimateAverage(
     source: "climate-average",
     tempMax: Math.round(avg("temperature_2m_max") * 10) / 10,
     tempMin: Math.round(avg("temperature_2m_min") * 10) / 10,
+    feelsLikeMax: Math.round(avg("apparent_temperature_max") * 10) / 10,
+    feelsLikeMin: Math.round(avg("apparent_temperature_min") * 10) / 10,
     precipitation: Math.round(avg("precipitation_sum") * 10) / 10,
     windSpeed: Math.round(avg("wind_speed_10m_max") * 10) / 10,
+    windDirection: Math.round(avg("wind_direction_10m_dominant")),
     weatherCode,
   };
 }
@@ -179,7 +195,7 @@ export async function fetchForecastWeatherHourly(
     longitude: String(waypoint.lon),
     ...(waypoint.altitude !== undefined ? { elevation: String(waypoint.altitude) } : {}),
     hourly: `${HOURLY_PARAMS},precipitation_probability`,
-    daily: "temperature_2m_max,temperature_2m_min",
+    daily: "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min",
     start_date: date,
     end_date: date,
     timezone: "Europe/Oslo",
@@ -195,13 +211,18 @@ export async function fetchForecastWeatherHourly(
     source: "forecast",
     tempMax: json.daily.temperature_2m_max[0],
     tempMin: json.daily.temperature_2m_min[0],
+    feelsLikeMax: json.daily.apparent_temperature_max?.[0] ?? undefined,
+    feelsLikeMin: json.daily.apparent_temperature_min?.[0] ?? undefined,
     precipitation: h.precipitation[hour] ?? 0,
     windSpeed: h.wind_speed_10m[hour] ?? 0,
+    windDirection: h.wind_direction_10m?.[hour] ?? undefined,
     weatherCode: h.weather_code[hour] ?? 0,
     precipitationProbability: h.precipitation_probability?.[hour] ?? undefined,
     hourlyTemp: h.temperature_2m[hour] ?? null,
+    hourlyFeelsLike: h.apparent_temperature?.[hour] ?? undefined,
     hourlyPrecipitation: h.precipitation[hour] ?? 0,
     hourlyWindSpeed: h.wind_speed_10m[hour] ?? 0,
+    hourlyWindDirection: h.wind_direction_10m?.[hour] ?? undefined,
   };
 }
 
@@ -226,7 +247,7 @@ export async function fetchClimateAverageHourly(
       longitude: String(waypoint.lon),
       ...(waypoint.altitude !== undefined ? { elevation: String(waypoint.altitude) } : {}),
       hourly: HOURLY_PARAMS,
-      daily: "temperature_2m_max,temperature_2m_min",
+      daily: "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min",
       start_date: d,
       end_date: d,
       timezone: "Europe/Oslo",
@@ -272,19 +293,26 @@ export async function fetchClimateAverageHourly(
       : 0;
 
   const hourlyTemp = Math.round(avgHourly("temperature_2m") * 10) / 10;
+  const hourlyFeelsLike = Math.round(avgHourly("apparent_temperature") * 10) / 10;
   const hourlyPrecipitation = Math.round(avgHourly("precipitation") * 10) / 10;
   const hourlyWindSpeed = Math.round(avgHourly("wind_speed_10m") * 10) / 10;
+  const hourlyWindDirection = Math.round(avgHourly("wind_direction_10m"));
 
   return {
     source: "climate-average",
     tempMax: Math.round(avgDaily("temperature_2m_max") * 10) / 10,
     tempMin: Math.round(avgDaily("temperature_2m_min") * 10) / 10,
+    feelsLikeMax: Math.round(avgDaily("apparent_temperature_max") * 10) / 10,
+    feelsLikeMin: Math.round(avgDaily("apparent_temperature_min") * 10) / 10,
     precipitation: hourlyPrecipitation,
     windSpeed: hourlyWindSpeed,
+    windDirection: hourlyWindDirection,
     weatherCode,
     hourlyTemp,
+    hourlyFeelsLike,
     hourlyPrecipitation,
     hourlyWindSpeed,
+    hourlyWindDirection,
   };
 }
 

@@ -1,9 +1,15 @@
+import { calcFinishTimeFromSpeed } from "../lib/timing";
+
+const SPEED_OPTIONS = [15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40] as const;
+
 type Props = {
   startTime: string;
   finishTime: string;
   onStartChange: (time: string) => void;
   onFinishChange: (time: string) => void;
   onClear: () => void;
+  /** Race distance in km. When provided, enables speed-based finish time calculation. */
+  distanceKm?: number;
 };
 
 export function TimePicker({
@@ -12,8 +18,17 @@ export function TimePicker({
   onStartChange,
   onFinishChange,
   onClear,
+  distanceKm,
 }: Props) {
   const hasValues = startTime !== "" || finishTime !== "";
+  const timingActive = startTime !== "" && finishTime !== "";
+
+  function handleSpeedChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const speed = Number(e.target.value);
+    if (!speed || !startTime || !distanceKm) return;
+    const computed = calcFinishTimeFromSpeed(startTime, distanceKm, speed);
+    onFinishChange(computed);
+  }
 
   return (
     <div className="time-picker">
@@ -30,6 +45,34 @@ export function TimePicker({
             className="time-picker__input"
           />
         </div>
+
+        {distanceKm != null && (
+          <div className="time-picker__field">
+            <label htmlFor="ritt-speed" className="time-picker__label">
+              Fart (km/t)
+            </label>
+            <select
+              id="ritt-speed"
+              className="time-picker__input time-picker__speed-select"
+              defaultValue=""
+              onChange={handleSpeedChange}
+              disabled={!startTime}
+            >
+              <option value="" disabled>
+                Velg fart…
+              </option>
+              {SPEED_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s} km/t
+                  {distanceKm
+                    ? ` ≈ ${Math.round((distanceKm / s) * 10) / 10} t`
+                    : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="time-picker__field">
           <label htmlFor="ritt-finish-time" className="time-picker__label">
             Forventet slutttid
@@ -42,6 +85,7 @@ export function TimePicker({
             className="time-picker__input"
           />
         </div>
+
         {hasValues && (
           <button
             type="button"
@@ -52,7 +96,7 @@ export function TimePicker({
           </button>
         )}
       </div>
-      {startTime && finishTime && (
+      {timingActive && (
         <div className="time-picker__hint">
           Viser vær ved forventet ankomsttid for hvert punkt
         </div>

@@ -2,6 +2,7 @@ import { useWeather, isForecastRange } from "../hooks/useWeather";
 import { WeatherCard } from "./WeatherCard";
 import type { Waypoint } from "../lib/weather";
 import { calcWaypointTimes, formatArrivalTime, WAYPOINT_FRACTIONS } from "../lib/timing";
+import { routeBearingForWaypoint } from "../lib/wind";
 
 type Props = {
   waypoints: Waypoint[];
@@ -50,6 +51,7 @@ export function WeatherStrip({ waypoints, date, startTime, finishTime }: Props) 
             isLoading={isLoading}
             isError={isError}
             arrivalTime={datetimes ? formatArrivalTime(datetimes[i]) : undefined}
+            routeBearing={routeBearingForWaypoint(waypoints, i) ?? undefined}
           />
         ))}
       </div>

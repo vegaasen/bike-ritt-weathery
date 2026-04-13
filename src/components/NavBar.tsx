@@ -35,7 +35,7 @@ export function NavBar() {
   return (
     <nav className="site-nav">
       <a href="/" className="site-nav__logo">
-        Rittvær
+        Startstreken
       </a>
       <div className="site-nav__selector">
         <select

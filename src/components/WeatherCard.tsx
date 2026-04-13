@@ -1,6 +1,7 @@
 import type { WeatherData } from "../lib/weather";
 import { describeWeatherCode } from "../lib/wmo";
 import type { Waypoint } from "../lib/weather";
+import { windRelativeLabel, degreesToCompass } from "../lib/wind";
 
 type Props = {
   waypoint: Waypoint;
@@ -9,13 +10,51 @@ type Props = {
   isError: boolean;
   /** Expected arrival time, e.g. "10:00". Present only in hourly/timing mode. */
   arrivalTime?: string;
+  /** Route bearing at this waypoint (degrees). Used to classify head/tail/crosswind. */
+  routeBearing?: number;
 };
 
-export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime }: Props) {
+/** Determines warning CSS modifier classes based on weather thresholds. */
+function warningClasses(data: WeatherData, routeBearing?: number): string[] {
+  const classes: string[] = [];
+
+  // Use hourly values when available (timing mode), otherwise daily
+  const temp = data.hourlyTemp ?? data.tempMin;
+  const precip = data.hourlyPrecipitation ?? data.precipitation;
+  const windSpeed = data.hourlyWindSpeed ?? data.windSpeed;
+  const windDir = data.hourlyWindDirection ?? data.windDirection;
+
+  if (temp < 0) {
+    classes.push("weather-card--warn-freeze");
+  } else if (temp < 10) {
+    classes.push("weather-card--warn-cold");
+  }
+
+  if (precip > 0.5) {
+    classes.push("weather-card--warn-rain");
+  }
+
+  // Headwind warning: only when we know the route direction
+  if (windDir !== undefined && routeBearing !== undefined && windSpeed > 10) {
+    const label = windRelativeLabel(windDir, routeBearing);
+    if (label === "Motvind") {
+      classes.push("weather-card--warn-wind");
+    }
+  }
+
+  return classes;
+}
+
+export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, routeBearing }: Props) {
   const { label } = waypoint;
 
+  const extraClasses =
+    data && !isLoading && !isError
+      ? warningClasses(data, routeBearing).join(" ")
+      : "";
+
   return (
-    <div className="weather-card">
+    <div className={`weather-card${extraClasses ? " " + extraClasses : ""}`}>
       <div className="weather-card__label">{label}</div>
       {waypoint.altitude != null && (
         <div className="weather-card__altitude">{waypoint.altitude} m o.h.</div>
@@ -26,7 +65,12 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime }:
       )}
 
       {isLoading && (
-        <div className="weather-card__loading">Laster...</div>
+        <div className="weather-card__skeleton" aria-hidden="true">
+          <div className="weather-card__skeleton-icon" />
+          <div className="weather-card__skeleton-line weather-card__skeleton-line--wide" />
+          <div className="weather-card__skeleton-line weather-card__skeleton-line--medium" />
+          <div className="weather-card__skeleton-line weather-card__skeleton-line--narrow" />
+        </div>
       )}
 
       {isError && (
@@ -35,6 +79,29 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime }:
 
       {data && (() => {
         const { label: wLabel, emoji } = describeWeatherCode(data.weatherCode);
+
+        // Effective wind direction and speed for display
+        const windDir = data.hourlyWindDirection ?? data.windDirection;
+        const windSpeed = data.hourlyWindSpeed ?? data.windSpeed;
+
+        // Wind direction label
+        let windDirLabel: string | null = null;
+        if (windDir !== undefined) {
+          if (routeBearing !== undefined) {
+            windDirLabel = windRelativeLabel(windDir, routeBearing);
+          } else {
+            windDirLabel = degreesToCompass(windDir);
+          }
+        }
+
+        // Feels-like temperature for display
+        const feelsLike =
+          data.hourlyFeelsLike ??
+          (data.feelsLikeMax != null ? data.feelsLikeMax : undefined);
+
+        // Actual temp for display
+        const showHourly = data.hourlyTemp != null;
+
         return (
           <>
             {data.source === "climate-average" && (
@@ -43,7 +110,7 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime }:
             <div className="weather-card__icon">{emoji}</div>
             <div className="weather-card__description">{wLabel}</div>
             <div className="weather-card__temps">
-              {data.hourlyTemp != null ? (
+              {showHourly ? (
                 <span className="weather-card__temp-hourly">{data.hourlyTemp}°</span>
               ) : (
                 <>
@@ -53,6 +120,11 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime }:
                 </>
               )}
             </div>
+            {feelsLike != null && (
+              <div className="weather-card__feels-like">
+                Føles som {feelsLike}°
+              </div>
+            )}
             <div className="weather-card__detail">
               <span title="Nedbør">
                 🌧 {data.precipitation} mm
@@ -62,7 +134,12 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime }:
               </span>
             </div>
             <div className="weather-card__detail">
-              <span title="Vind">💨 {data.windSpeed} km/t</span>
+              <span title="Vind">
+                💨 {windSpeed} km/t
+                {windDirLabel && (
+                  <span className="weather-card__wind-dir"> · {windDirLabel}</span>
+                )}
+              </span>
             </div>
           </>
         );

@@ -705,6 +705,46 @@ details[open] .history-table__summary::before {
   font-style: italic;
 }
 
+.weather-card__feels-like {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.weather-card__wind-dir {
+  font-weight: 500;
+}
+
+/* ─── Warning state modifiers ────────────────────────────────────────── */
+/* Applied via a colored left-border accent bar for fast visual scanning. */
+
+.weather-card--warn-rain {
+  border-left: 3px solid #f59e0b; /* amber — precipitation */
+}
+
+.weather-card--warn-wind {
+  border-left: 3px solid #f97316; /* orange — headwind */
+}
+
+.weather-card--warn-cold {
+  border-left: 3px solid #3b82f6; /* blue — below 10 °C */
+}
+
+.weather-card--warn-freeze {
+  border-left: 3px solid #8b5cf6; /* purple — below 0 °C */
+}
+
+/* When both rain and cold/freeze apply, freeze takes priority via cascade order. */
+/* Compound: rain + cold */
+.weather-card--warn-rain.weather-card--warn-cold {
+  border-left: 3px solid #6366f1; /* indigo */
+}
+
+/* Compound: rain + freeze */
+.weather-card--warn-rain.weather-card--warn-freeze {
+  border-left: 3px solid #8b5cf6;
+}
+
 /* ─── Weather components ─────────────────────────────────────────────── */
 
 .weather-strip {
@@ -724,6 +764,22 @@ details[open] .history-table__summary::before {
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 8px;
+
+  @media (max-width: 768px) {
+    scroll-snap-type: x mandatory;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      black calc(100% - 48px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      black calc(100% - 48px),
+      transparent 100%
+    );
+    /* Extend padding so last card isn't fully hidden by the fade */
+    padding-right: 48px;
+  }
 }
 
 .weather-card {
@@ -745,6 +801,7 @@ details[open] .history-table__summary::before {
 
   @media (max-width: 768px) {
     flex: 0 0 140px;
+    scroll-snap-align: start;
   }
 }
 
@@ -823,15 +880,49 @@ details[open] .history-table__summary::before {
   color: #ef4444;
 }
 
-/* Loading skeleton animation */
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+/* Loading skeleton */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.weather-card__loading {
-  animation: skeleton-pulse 1.4s ease-in-out infinite;
+.weather-card__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
 }
+
+.weather-card__skeleton-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--code-bg) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.weather-card__skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--code-bg) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.weather-card__skeleton-line--wide   { width: 80%; }
+.weather-card__skeleton-line--medium { width: 60%; animation-delay: 0.1s; }
+.weather-card__skeleton-line--narrow { width: 45%; animation-delay: 0.2s; }
 
 .weather-strip__source-banner {
   font-size: 12px;
@@ -839,6 +930,63 @@ details[open] .history-table__summary::before {
   font-style: italic;
   margin-top: 8px;
   text-align: left;
+}
+
+/* ─── Gear suggestion ────────────────────────────────────────────────── */
+
+.gear-suggestion {
+  margin-top: 16px;
+}
+
+.gear-suggestion__heading {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.gear-suggestion__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gear-suggestion__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.gear-suggestion__icon {
+  flex-shrink: 0;
+  font-size: 15px;
+}
+
+.gear-suggestion__item--info {
+  background: color-mix(in srgb, #22c55e 8%, transparent);
+  border-color: color-mix(in srgb, #22c55e 30%, transparent);
+  color: var(--text-h);
+}
+
+.gear-suggestion__item--warn {
+  background: color-mix(in srgb, #f59e0b 8%, transparent);
+  border-color: color-mix(in srgb, #f59e0b 35%, transparent);
+  color: var(--text-h);
+}
+
+.gear-suggestion__item--danger {
+  background: color-mix(in srgb, #ef4444 8%, transparent);
+  border-color: color-mix(in srgb, #ef4444 30%, transparent);
+  color: var(--text-h);
 }
 
 /* ─── DatePicker / TimePicker ────────────────────────────────────────── */
@@ -907,6 +1055,45 @@ details[open] .history-table__summary::before {
   border: 1px solid var(--accent-border);
   border-radius: var(--radius);
   padding: 5px 10px;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover {
+    background: var(--accent-bg);
+  }
+}
+
+.time-picker__speed-select {
+  min-width: 140px;
+}
+
+/* ─── Error boundary ─────────────────────────────────────────────────── */
+
+.error-boundary {
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+
+  @media (max-width: 1024px) {
+    padding: 20px 16px;
+  }
+}
+
+.error-boundary__message {
+  font-size: 14px;
+  color: #ef4444;
+}
+
+.error-boundary__retry {
+  font: inherit;
+  font-size: 13px;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius);
+  padding: 5px 12px;
   cursor: pointer;
   transition: background 0.12s;
 
