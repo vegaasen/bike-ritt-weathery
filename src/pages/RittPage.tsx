@@ -54,7 +54,7 @@ export function RittPage() {
     return (
       <div className="ritt-page ritt-page--not-found">
         <p>Fant ikke ritt med id «{id}».</p>
-        <Link to="/">Tilbake til oversikt</Link>
+        <Link to="../">Tilbake til oversikt</Link>
       </div>
     );
   }

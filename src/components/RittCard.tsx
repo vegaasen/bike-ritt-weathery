@@ -31,7 +31,7 @@ export function RittCard({
 
   return (
     <Link
-      to={`/ritt/${id}`}
+      to={`ritt/${id}`}
       className={`ritt-card${planned ? " ritt-card--planned" : ""}`}
     >
       <div className="ritt-card__name">{name}</div>

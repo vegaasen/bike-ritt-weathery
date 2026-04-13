@@ -39,7 +39,7 @@ function App() {
       <BrowserRouter>
         <NavBar />
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route index element={<HomePage />} />
           <Route path="/ritt/:id" element={<RittPage />} />
         </Routes>
         <SiteFooter />
