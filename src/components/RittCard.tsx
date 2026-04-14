@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import type { DifficultyResult } from "../lib/difficulty";
 
 type Props = {
   id: string;
@@ -13,6 +14,8 @@ type Props = {
   onTogglePlanned?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   /** Countdown string, e.g. "om 3 dager" or "i dag" */
   countdown?: string;
+  /** Static physical difficulty badge */
+  difficulty?: DifficultyResult;
 };
 
 const DISCIPLINE_LABEL: Record<"landevei" | "terreng", string> = {
@@ -31,6 +34,7 @@ export function RittCard({
   planned = false,
   onTogglePlanned,
   countdown,
+  difficulty,
 }: Props) {
   const dateStr = displayDate ?? officialDate;
   const formattedDate = new Date(dateStr).toLocaleDateString("nb-NO", {
@@ -51,6 +55,11 @@ export function RittCard({
         {discipline && (
           <span className={`ritt-card__discipline ritt-card__discipline--${discipline}`}>
             {DISCIPLINE_LABEL[discipline]}
+          </span>
+        )}
+        {difficulty && (
+          <span className={`ritt-card__difficulty ritt-card__difficulty--${difficulty.level}`}>
+            {difficulty.label}
           </span>
         )}
       </div>

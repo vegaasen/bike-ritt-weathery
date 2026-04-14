@@ -6,8 +6,10 @@ import { WeatherStrip } from "../components/WeatherStrip";
 import { RittMap } from "../components/RittMap";
 import { HistoricalWeatherTable } from "../components/HistoricalWeatherTable";
 import { GearSuggestion } from "../components/GearSuggestion";
+import { ElevationProfile } from "../components/ElevationProfile";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { computeElevationGain, type RittEntry } from "../lib/ritt";
+import { physicalScore, weatherAdjustment, scoreToLabel } from "../lib/difficulty";
 import { useMyRitt } from "../hooks/useMyRitt";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useWeather } from "../hooks/useWeather";
@@ -101,6 +103,22 @@ export function RittPage() {
 
   const elevationGain = rittData?.elevationGain ?? computeElevationGain(rittData.waypoints);
 
+  // Static difficulty (physical only — no weather)
+  const physDifficulty =
+    elevationGain != null
+      ? scoreToLabel(physicalScore(rittData.distance, elevationGain))
+      : null;
+
+  // Weather-adjusted difficulty (only when weather is loaded)
+  const hasWeatherData = weatherResults.some((r) => r.data != null);
+  const weatherAdj = hasWeatherData
+    ? weatherAdjustment(weatherResults, rittData.waypoints)
+    : 0;
+  const adjDifficulty =
+    physDifficulty && hasWeatherData
+      ? scoreToLabel(physicalScore(rittData.distance, elevationGain!) + weatherAdj)
+      : null;
+
   return (
     <div className="ritt-page">
       <header className="ritt-page__header">
@@ -110,6 +128,13 @@ export function RittPage() {
           {elevationGain != null && (
             <span className="ritt-page__meta-item ritt-page__meta-item--elevation">
               ↑ {elevationGain} m
+            </span>
+          )}
+          {physDifficulty && (
+            <span
+              className={`ritt-page__meta-item ritt-page__difficulty-badge ritt-page__difficulty-badge--${physDifficulty.level}`}
+            >
+              {physDifficulty.label}
             </span>
           )}
           <span className="ritt-page__meta-item">{rittData.region}</span>
@@ -138,6 +163,10 @@ export function RittPage() {
 
       <section className="ritt-page__map-section">
         <RittMap waypoints={rittData.waypoints} name={rittData.name} />
+      </section>
+
+      <section className="ritt-page__elevation-section">
+        <ElevationProfile waypoints={rittData.waypoints} distanceKm={rittData.distance} />
       </section>
 
       <section className="ritt-page__date-section">
@@ -174,10 +203,33 @@ export function RittPage() {
             finishTime={finishTime || null}
           />
           {selectedDate && (
-            <GearSuggestion
-              results={weatherResults}
-              waypoints={rittData.waypoints}
-            />
+            <>
+              {adjDifficulty && physDifficulty && (
+                <div className="dag-vurdering">
+                  <span className="dag-vurdering__label">Dag-vurdering:</span>
+                  {adjDifficulty.level !== physDifficulty.level ? (
+                    <>
+                      <span className={`dag-vurdering__badge dag-vurdering__badge--${physDifficulty.level}`}>
+                        {physDifficulty.label}
+                      </span>
+                      <span className="dag-vurdering__arrow">→</span>
+                      <span className={`dag-vurdering__badge dag-vurdering__badge--${adjDifficulty.level}`}>
+                        {adjDifficulty.label}
+                      </span>
+                      <span className="dag-vurdering__note">pga. vær</span>
+                    </>
+                  ) : (
+                    <span className={`dag-vurdering__badge dag-vurdering__badge--${adjDifficulty.level}`}>
+                      {adjDifficulty.label}
+                    </span>
+                  )}
+                </div>
+              )}
+              <GearSuggestion
+                results={weatherResults}
+                waypoints={rittData.waypoints}
+              />
+            </>
           )}
         </ErrorBoundary>
       </section>

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { RittCard } from "../components/RittCard";
 import { useMyRitt } from "../hooks/useMyRitt";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { physicalScore, scoreToLabel } from "../lib/difficulty";
+import type { DifficultyResult } from "../lib/difficulty";
 import ritt from "../data/ritt.json";
 
 type Race = (typeof ritt)[number];
@@ -45,6 +47,12 @@ function formatCountdown(dateStr: string): string {
   if (diff === -1) return "i går";
   if (diff > 0) return `om ${diff} dager`;
   return `${Math.abs(diff)} dager siden`;
+}
+
+function getDifficulty(r: Race): DifficultyResult | undefined {
+  const elevGain = (r as Race & { elevationGain?: number }).elevationGain;
+  if (elevGain == null) return undefined;
+  return scoreToLabel(physicalScore(r.distance, elevGain));
 }
 
 const DISCIPLINE_LABELS: Record<Discipline, string> = {
@@ -139,6 +147,7 @@ export function HomePage() {
                   discipline={r.discipline as "landevei" | "terreng"}
                   displayDate={entry?.date}
                   countdown={formatCountdown(date)}
+                  difficulty={getDifficulty(r)}
                   planned
                   onTogglePlanned={(e) => handleToggle(r.id, r.officialDate, e)}
                 />
@@ -162,6 +171,7 @@ export function HomePage() {
                 region={r.region}
                 discipline={r.discipline as "landevei" | "terreng"}
                 countdown={formatCountdown(r.officialDate)}
+                difficulty={getDifficulty(r)}
                 planned={isPlanned(r.id)}
                 onTogglePlanned={(e) => handleToggle(r.id, r.officialDate, e)}
               />
@@ -185,17 +195,18 @@ export function HomePage() {
                   <h3 className="home-page__month-heading">{monthName(month)}</h3>
                   <div className="home-page__grid">
                     {byMonth.get(month)!.map((r) => (
-                      <RittCard
-                        key={r.id}
-                        id={r.id}
-                        name={r.name}
-                        officialDate={r.officialDate}
-                        distance={r.distance}
-                        region={r.region}
-                        discipline={r.discipline as "landevei" | "terreng"}
-                        planned={isPlanned(r.id)}
-                        onTogglePlanned={(e) => handleToggle(r.id, r.officialDate, e)}
-                      />
+                       <RittCard
+                         key={r.id}
+                         id={r.id}
+                         name={r.name}
+                         officialDate={r.officialDate}
+                         distance={r.distance}
+                         region={r.region}
+                         discipline={r.discipline as "landevei" | "terreng"}
+                         difficulty={getDifficulty(r)}
+                         planned={isPlanned(r.id)}
+                         onTogglePlanned={(e) => handleToggle(r.id, r.officialDate, e)}
+                       />
                     ))}
                   </div>
                 </div>
