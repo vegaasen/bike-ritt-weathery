@@ -99,7 +99,7 @@ src/
 - [ ] **GPX upload** — derive waypoints automatically from a GPX file
 - [x] **More ritt** — expanded to 18; sync with [sykling.no terminliste](https://sykling.no/sykkelritt/terminliste/) each season
 - [ ] **Langrenn** — add cross-country ski races (e.g. Birkebeinerrennet, Holmenkollmarsjen) with a `type` field in the data model; add relative humidity (`relative_humidity_2m`) to API calls; show humidity in WeatherCard for ski disciplines
-- [ ] **Copy link button** — explicit share button alongside the existing URL-based state
+- [x] **Copy link button** — explicit share button alongside the existing URL-based state
 - [ ] **Comparison mode** — show official date vs custom date side by side
 - [ ] **Hourly breakdown** — expand a waypoint card to show hour-by-hour forecast
 - [ ] **Wind direction** — add degrees → compass label to WeatherCard

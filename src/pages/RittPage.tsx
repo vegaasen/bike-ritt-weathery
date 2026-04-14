@@ -7,7 +7,7 @@ import { RittMap } from "../components/RittMap";
 import { HistoricalWeatherTable } from "../components/HistoricalWeatherTable";
 import { GearSuggestion } from "../components/GearSuggestion";
 import { ErrorBoundary } from "../components/ErrorBoundary";
-import { computeElevationGain } from "../lib/ritt";
+import { computeElevationGain, type RittEntry } from "../lib/ritt";
 import { useMyRitt } from "../hooks/useMyRitt";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useWeather } from "../hooks/useWeather";
@@ -20,7 +20,7 @@ export function RittPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isPlanned, getPlanned, add, remove } = useMyRitt();
 
-  const rittData = ritt.find((r) => r.id === id);
+  const rittData = ritt.find((r) => r.id === id) as RittEntry | undefined;
 
   usePageTitle(rittData ? `${rittData.name} – Startstreken` : "Fant ikke ritt – Startstreken");
 
@@ -99,7 +99,7 @@ export function RittPage() {
     { day: "numeric", month: "long", year: "numeric" }
   );
 
-  const elevationGain = computeElevationGain(rittData.waypoints);
+  const elevationGain = rittData?.elevationGain ?? computeElevationGain(rittData.waypoints);
 
   return (
     <div className="ritt-page">

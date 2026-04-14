@@ -1,5 +1,16 @@
 import type { Waypoint } from "./weather";
 
+export interface RittEntry {
+  id: string;
+  name: string;
+  distance: number;
+  region: string;
+  officialDate: string;
+  url?: string;
+  waypoints: Waypoint[];
+  elevationGain?: number;
+}
+
 /**
  * Computes accumulated elevation gain (metres climbed) from an ordered list
  * of waypoints with altitude data. Only positive altitude differences are summed.
