@@ -1,4 +1,4 @@
-# Startstreken 🚴
+# Rittvær 🚴
 
 **Sjekk været langs ruten for norske sykkelritt og langrenn.**
 
@@ -12,7 +12,16 @@ Pick a Norwegian cycling race, choose a date, and get weather conditions at ~5 k
 - Select any date to see weather along the route
 - **Forecast mode** — live data from Open-Meteo when the date is ≤ 16 days away
 - **Climate average mode** — 10-year historical average (2015–2024) for dates further in the future
+- **Pacing** — set start/finish time to get waypoint-specific hourly forecasts
+- **Gear suggestions** — rule-based recommendations from temperature, precipitation, and wind
+- **Elevation profile** — SVG chart with waypoint markers
+- **Map view** — Leaflet map with colour-coded waypoint pins and OSRM route polyline
+- **Bookmarks** — save ritt + date combos via "Mine ritt" (persisted in localStorage)
+- **Wind direction** — compass bearing + relative label (Medvind/Motvind/Sidevind)
+- **Feels-like temperature** — `apparent_temperature` from Open-Meteo
+- **Precipitation probability** — % chance of rain alongside expected mm
 - Shareable URLs — date is stored in the query string (`/ritt/birkebeinerrittet?date=2025-08-23`)
+- Dark mode via `prefers-color-scheme`
 
 ## Ritt included
 
@@ -43,73 +52,84 @@ Pick a Norwegian cycling race, choose a date, and get weather conditions at ~5 k
 
 ```bash
 bun install
-bun run dev       # opens browser automatically
-bun run build     # production build
-bun run lint      # ESLint
+bun run dev            # starts dev server
+bun run build          # production build (tsc + vite)
+bun run lint           # ESLint (type-aware)
+bun run fetch-weather  # refresh src/data/weather-cache.json manually
 ```
+
+The weather cache (`src/data/weather-cache.json`) is also refreshed nightly via GitHub Actions — you only need `fetch-weather` locally if you want fresh historical data before committing.
 
 ## Project structure
 
 ```
 src/
   data/
-    ritt.json              # Curated ritt with 5 waypoints each
+    ritt.json                    # Curated ritt with 5 waypoints each
+    weather-cache.json           # Nightly-refreshed historical weather cache (auto-generated)
   lib/
-    weather.ts             # Open-Meteo forecast + historical fetchers
-    wmo.ts                 # WMO weather code → Norwegian label + emoji
+    weather.ts                   # Open-Meteo forecast + historical fetchers
+    wmo.ts                       # WMO weather code → Norwegian label + emoji
+    wind.ts                      # Wind direction helpers + relative label (Medvind/Motvind/Sidevind)
+    timing.ts                    # Waypoint arrival time calculator from start/finish time
+    difficulty.ts                # Difficulty rating derived from weather + route conditions
+    ritt.ts                      # Ritt data helpers and type definitions
   hooks/
-    useWeather.ts          # TanStack Query wrapper
+    useWeather.ts                # TanStack Query wrapper (useQueries per waypoint)
+    useMyRitt.ts                 # Bookmark persistence in localStorage
+    usePageTitle.ts              # Sets <title> per route
   components/
-    RittCard.tsx           # Race card on the home page
-    DatePicker.tsx         # Date input with reset-to-official-date button
-    WeatherStrip.tsx       # Row of weather cards + forecast/climate banner
-    WeatherCard.tsx        # Per-waypoint: temp, rain, wind, icon
+    RittCard.tsx                 # Race card on the home page
+    RittMap.tsx                  # Leaflet map with waypoints + OSRM route polyline
+    DatePicker.tsx               # Date input with reset-to-official-date button
+    TimePicker.tsx               # Start/finish time inputs
+    WeatherStrip.tsx             # Row of weather cards + forecast/climate banner
+    WeatherCard.tsx              # Per-waypoint: temp, rain, wind, icon
+    ElevationProfile.tsx         # SVG elevation chart with waypoint dots
+    GearSuggestion.tsx           # Gear recommendations from weather conditions
+    HistoricalWeatherTable.tsx   # Historical averages table view
+    ShareButton.tsx              # Copy shareable link to clipboard
+    NavBar.tsx                   # Top navigation bar
+    ErrorBoundary.tsx            # App-level + per-strip error boundary
+    ReloadPrompt.tsx             # PWA update prompt
   pages/
-    HomePage.tsx           # Ritt grid, sorted by official date
-    RittPage.tsx           # Detail: meta + date picker + weather strip
-  App.tsx                  # Router + QueryClientProvider
+    HomePage.tsx                 # Ritt grid, sorted by official date
+    RittPage.tsx                 # Detail: meta + date picker + weather strip
+    NotFoundPage.tsx             # 404 catch-all
+  App.tsx                        # Router + QueryClientProvider
+scripts/
+  fetch-weather-cache.ts         # Fetches historical data and writes weather-cache.json
 ```
 
 ## Tech stack
 
 | | |
 |---|---|
-| Framework | React 19 + TypeScript (strict) |
+| Framework | React 19 + TypeScript 6 (strict) |
 | Build | Vite 8, Bun |
 | Routing | react-router-dom v7 |
 | Data fetching | TanStack Query v5 |
+| Map | Leaflet + react-leaflet |
+| PWA | vite-plugin-pwa |
 | Weather API | [Open-Meteo](https://open-meteo.com) (free, no auth) |
 
 ---
 
-## TODO
+## Roadmap
 
-### v1 polish
+### Open
 
-- [ ] **Design system** — pick and integrate a component library (e.g. shadcn/ui, Radix + Tailwind, [Designsystemet](https://www.designsystemet.no/)); replace bare HTML with styled components
-- [x] **Responsive layout** — WeatherStrip gets scroll-snap + fade-mask hint on mobile; HomePage grid already collapses to single column via `minmax(240px, 1fr)`
-- [x] **Loading skeletons** — shimmer skeleton shapes (icon + text lines) replace plain "Laster..." text in WeatherCard
-- [x] **Error boundary** — `ErrorBoundary` class component at app root + around WeatherStrip in RittPage; "Prøv igjen" retry button
-- [x] **Page titles** — `usePageTitle` hook sets `<title>` per route ("Birkebeinerrittet – Rittvær", "Siden finnes ikke – Rittvær", etc.)
-- [x] **404 page** — catch-all `<Route path="*">` renders `NotFoundPage`; data-level guard in RittPage also uses page title
-
-### v2 features
-
-- [x] **Map view** — Leaflet + react-leaflet map with colour-coded waypoint pins; OSRM route polyline with straight-line fallback; lazy-loaded inside a `<details>` toggle
 - [ ] **GPX upload** — derive waypoints automatically from a GPX file
-- [x] **More ritt** — expanded to 18; sync with [sykling.no terminliste](https://sykling.no/sykkelritt/terminliste/) each season
-- [ ] **Langrenn** — add cross-country ski races (e.g. Birkebeinerrennet, Holmenkollmarsjen) with a `type` field in the data model; add relative humidity (`relative_humidity_2m`) to API calls; show humidity in WeatherCard for ski disciplines
-- [x] **Copy link button** — explicit share button alongside the existing URL-based state
+- [ ] **Langrenn** — add cross-country ski races (Birkebeinerrennet, Holmenkollmarsjen etc.); add `type` field to data model; show relative humidity for ski disciplines
+- [ ] **Official start time pre-fill** — pre-populate start time with the known mass-start time per ritt
 - [ ] **Comparison mode** — show official date vs custom date side by side
 - [ ] **Hourly breakdown** — expand a waypoint card to show hour-by-hour forecast
-- [x] **Wind direction** — `degreesToCompass()` in `wind.ts` (8-point) + relative label (Medvind/Motvind/Sidevind); rendered in WeatherCard with a rotated arrow
-- [x] **Feels-like temperature** — `apparent_temperature` from Open-Meteo; shown as "Føles som X°" in WeatherCard
-- [x] **Precipitation probability** — show % chance of rain in addition to expected mm; more actionable for gear decisions
-- [~] **Pacing model** — speed input sets finish time (`calcFinishTimeFromSpeed`); waypoint splits still use linear distance interpolation (elevation-aware pacing not yet done)
-- [x] **Gear suggestion** — `GearSuggestion.tsx` rule set: temperature thresholds, precipitation levels, headwind, with `info`/`warn`/`danger` severity
-- [x] **My planned ritt** — `useMyRitt` hook persists ritt + date/time bookmarks in localStorage under `rittvær:mine-ritt`; "Mine ritt" section on HomePage + bookmark toggle in RittPage
-- [ ] **Official start time pre-fill** — pre-populate start time input with the known mass-start time for each ritt
-- [x] **Elevation profile chart** — `ElevationProfile.tsx` SVG chart with filled area, waypoint dots, km/altitude axis labels
+- [ ] **Elevation-aware pacing** — `calcFinishTimeFromSpeed` currently uses linear distance; add elevation correction
+- [ ] **Tests** — Vitest unit tests for `weather.ts` (mocked fetch) and `wmo.ts`
+- [ ] **Offline / PWA** — cache last-fetched weather for use without connectivity
+- [ ] **Weather trend indicator** — warmer/colder arrow relative to day before
+- [ ] **UV index** — relevant for long summer ritt on exposed mountain terrain
+- [ ] **Wet road risk** — combine recent precip + temp to flag likely icy/wet conditions
 
 ### Data quality
 
@@ -117,27 +137,11 @@ src/
 - [ ] **Altitude values** — confirm `altitude` per waypoint for accurate temperature correction
 - [ ] **Official dates** — update `ritt.json` each year when terminlisten is published
 
-### Technical
-
-- [x] **Fix `useWeather` hook** — refactored from `useQuery` in a loop to [`useQueries`](https://tanstack.com/query/latest/docs/framework/react/reference/useQueries) (rules of hooks)
-- [ ] **Tests** — Vitest unit tests for `weather.ts` (mocked fetch) and `wmo.ts`
-- [~] **CI** — GitHub Actions runs typecheck (via `tsc -b`) + lint on push/PR; test step pending until Vitest is added
-- [x] **Deployment** — GitHub Pages via `.github/workflows/pages.yml` (deploy on push to `main`)
-- [x] **ESLint type-aware rules** — upgraded to `tseslint.configs.recommendedTypeChecked`
-
-### Nice to have
-
-- [x] **Dark mode** — `@media (prefers-color-scheme: dark)` + `color-scheme: light dark` in `index.css`
-- [ ] **Offline / PWA** — cache last-fetched weather for use without connectivity
-- [ ] **Weather trend indicator** — warmer/colder arrow relative to day before
-- [ ] **UV index** — relevant for long summer ritt on exposed mountain terrain
-- [ ] **Wet road risk indicator** — combine recent precip + temp to flag likely icy/wet conditions, useful for spring ritt
-
 ---
 
 ## Data sources
 
 - Weather: [Open-Meteo](https://open-meteo.com) — free, CORS-friendly, no API key required
 - Race calendar: [sykling.no](https://sykling.no/sykkelritt/terminliste/)
-- EQTimer' APIs: https://api.eqtiming.com/docs#!/Event
+- EQTimer APIs: https://api.eqtiming.com/docs#!/Event
 - Route waypoints: manually curated from maps and race websites
