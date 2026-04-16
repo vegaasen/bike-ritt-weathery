@@ -894,6 +894,23 @@ details[open] .history-table__summary::before {
   opacity: 0.8;
 }
 
+/* ─── Temperature trend ──────────────────────────────────────────────── */
+
+.weather-card__trend {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.weather-card__trend--up {
+  color: #ef4444; /* warmer = red */
+}
+
+.weather-card__trend--down {
+  color: #3b82f6; /* colder = blue */
+}
+
 .weather-card__wind-dir {
   font-weight: 500;
 }
@@ -1056,6 +1073,52 @@ details[open] .history-table__summary::before {
 .weather-card__detail {
   font-size: 13px;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ─── UV index badge ─────────────────────────────────────────────────── */
+
+.weather-card__uv {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 99px;
+  display: inline-block;
+}
+
+.weather-card__uv--moderate  { background: #fef9c3; color: #854d0e; }
+.weather-card__uv--high      { background: #fed7aa; color: #9a3412; }
+.weather-card__uv--very-high { background: #fecaca; color: #7f1d1d; }
+.weather-card__uv--extreme   { background: #e9d5ff; color: #4c1d95; }
+
+@media (prefers-color-scheme: dark) {
+  .weather-card__uv--moderate  { background: #422006; color: #fef08a; }
+  .weather-card__uv--high      { background: #431407; color: #fdba74; }
+  .weather-card__uv--very-high { background: #450a0a; color: #fca5a5; }
+  .weather-card__uv--extreme   { background: #2e1065; color: #d8b4fe; }
+}
+
+/* ─── Road risk badge ────────────────────────────────────────────────── */
+
+.weather-card__road-risk {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 99px;
+  display: inline-block;
+}
+
+.weather-card__road-risk--ice   { background: #e0f2fe; color: #0c4a6e; }
+.weather-card__road-risk--slush { background: #fef3c7; color: #78350f; }
+.weather-card__road-risk--wet   { background: #f0f9ff; color: #164e63; }
+
+@media (prefers-color-scheme: dark) {
+  .weather-card__road-risk--ice   { background: #082f49; color: #bae6fd; }
+  .weather-card__road-risk--slush { background: #451a03; color: #fcd34d; }
+  .weather-card__road-risk--wet   { background: #083344; color: #a5f3fc; }
 }
 
 .weather-card__loading,
@@ -1278,6 +1341,27 @@ details[open] .history-table__summary::before {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.time-picker__prefill {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.85;
+  &:hover { opacity: 1; }
 }
 
 .date-picker__controls,

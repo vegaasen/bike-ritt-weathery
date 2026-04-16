@@ -6,6 +6,8 @@ export interface RittEntry {
   distance: number;
   region: string;
   officialDate: string;
+  /** Known mass-start time in "HH:MM" format, e.g. "08:00". Optional — not all ritt have a confirmed time. */
+  officialStartTime?: string;
   url?: string;
   waypoints: Waypoint[];
   elevationGain?: number;

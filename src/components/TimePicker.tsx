@@ -10,6 +10,8 @@ type Props = {
   onClear: () => void;
   /** Race distance in km. When provided, enables speed-based finish time calculation. */
   distanceKm?: number;
+  /** Known mass-start time in "HH:MM". When provided and startTime is empty, shows a prefill hint. */
+  officialStartTime?: string;
 };
 
 export function TimePicker({
@@ -19,6 +21,7 @@ export function TimePicker({
   onFinishChange,
   onClear,
   distanceKm,
+  officialStartTime,
 }: Props) {
   const hasValues = startTime !== "" || finishTime !== "";
   const timingActive = startTime !== "" && finishTime !== "";
@@ -36,6 +39,15 @@ export function TimePicker({
         <div className="time-picker__field">
           <label htmlFor="ritt-start-time" className="time-picker__label">
             Starttid
+            {officialStartTime && !startTime && (
+              <button
+                type="button"
+                className="time-picker__prefill"
+                onClick={() => onStartChange(officialStartTime)}
+              >
+                Bruk offisiell starttid ({officialStartTime})
+              </button>
+            )}
           </label>
           <input
             id="ritt-start-time"

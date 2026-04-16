@@ -30,6 +30,16 @@ export type WeatherData = {
   hourlyWindSpeed?: number;
   /** Wind direction degrees for the specific arrival hour */
   hourlyWindDirection?: number;
+  /**
+   * UV index max for the day. Only present for forecast mode and live archive
+   * calls (not available for pre-built climate-average cache entries).
+   */
+  uvIndex?: number;
+  /**
+   * Temperature trend vs the previous calendar day (today's tempMax − yesterday's tempMax).
+   * Positive = warmer, negative = colder. Rounded to 1 decimal place.
+   */
+  tempTrend?: number;
 };
 
 /** Shape of the Open-Meteo daily-only API response used by this app */
@@ -44,6 +54,7 @@ interface OpenMeteoDailyResponse {
     wind_direction_10m_dominant?: (number | null)[];
     weather_code: (number | null)[];
     precipitation_probability_max?: (number | null)[];
+    uv_index_max?: (number | null)[];
   };
 }
 
@@ -63,6 +74,7 @@ interface OpenMeteoHourlyResponse {
     temperature_2m_min: (number | null)[];
     apparent_temperature_max?: (number | null)[];
     apparent_temperature_min?: (number | null)[];
+    uv_index_max?: (number | null)[];
   };
 }
 
@@ -70,7 +82,7 @@ const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive";
 
 const DAILY_PARAMS =
-  "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant,weather_code";
+  "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant,weather_code,uv_index_max";
 
 const HOURLY_PARAMS = "temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,weather_code";
 
@@ -79,6 +91,26 @@ function parseDatetime(datetime: string): { date: string; hour: number } {
   const [date, time] = datetime.split("T");
   const hour = parseInt(time?.split(":")?.[0] ?? "0", 10);
   return { date, hour };
+}
+
+/** Returns the previous calendar day as "YYYY-MM-DD" */
+function prevCalendarDay(date: string): string {
+  const d = new Date(date + "T00:00:00");
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split("T")[0];
+}
+
+/**
+ * Returns { prevMM, prevDD } for the previous calendar day of a given MM/DD.
+ * Uses a leap year (2020) so Feb 29 works.
+ */
+function prevCalendarMonthDay(month: string, day: string): { prevMM: string; prevDD: string } {
+  const d = new Date(`2020-${month}-${day}T00:00:00`);
+  d.setDate(d.getDate() - 1);
+  return {
+    prevMM: String(d.getMonth() + 1).padStart(2, "0"),
+    prevDD: String(d.getDate()).padStart(2, "0"),
+  };
 }
 
 /** Returns true if selectedDate is within 16 days from today */
@@ -94,12 +126,15 @@ export async function fetchForecastWeather(
   waypoint: Waypoint,
   date: string
 ): Promise<WeatherData> {
+  // Fetch 2 days (prevDay + selectedDay) to compute the temperature trend.
+  const startDate = prevCalendarDay(date);
+
   const params = new URLSearchParams({
     latitude: String(waypoint.lat),
     longitude: String(waypoint.lon),
     ...(waypoint.altitude !== undefined ? { elevation: String(waypoint.altitude) } : {}),
     daily: `${DAILY_PARAMS},precipitation_probability_max`,
-    start_date: date,
+    start_date: startDate,
     end_date: date,
     timezone: "Europe/Oslo",
   });
@@ -108,18 +143,29 @@ export async function fetchForecastWeather(
   if (!res.ok) throw new Error(`Open-Meteo forecast error: ${res.status}`);
   const json = await res.json() as OpenMeteoDailyResponse;
 
+  // Index 0 = previous day, index 1 = selected day
   const d = json.daily;
+  const i = 1;
+  const prevTempMax = d.temperature_2m_max[0] ?? null;
+  const todayTempMax = d.temperature_2m_max[i] ?? 0;
+  const tempTrend =
+    prevTempMax !== null
+      ? Math.round((todayTempMax - prevTempMax) * 10) / 10
+      : undefined;
+
   return {
     source: "forecast",
-    tempMax: d.temperature_2m_max[0] ?? 0,
-    tempMin: d.temperature_2m_min[0] ?? 0,
-    feelsLikeMax: d.apparent_temperature_max?.[0] ?? undefined,
-    feelsLikeMin: d.apparent_temperature_min?.[0] ?? undefined,
-    precipitation: d.precipitation_sum[0] ?? 0,
-    windSpeed: d.wind_speed_10m_max[0] ?? 0,
-    windDirection: d.wind_direction_10m_dominant?.[0] ?? undefined,
-    weatherCode: d.weather_code[0] ?? 0,
-    precipitationProbability: d.precipitation_probability_max?.[0] ?? undefined,
+    tempMax: todayTempMax,
+    tempMin: d.temperature_2m_min[i] ?? 0,
+    feelsLikeMax: d.apparent_temperature_max?.[i] ?? undefined,
+    feelsLikeMin: d.apparent_temperature_min?.[i] ?? undefined,
+    precipitation: d.precipitation_sum[i] ?? 0,
+    windSpeed: d.wind_speed_10m_max[i] ?? 0,
+    windDirection: d.wind_direction_10m_dominant?.[i] ?? undefined,
+    weatherCode: d.weather_code[i] ?? 0,
+    precipitationProbability: d.precipitation_probability_max?.[i] ?? undefined,
+    uvIndex: d.uv_index_max?.[i] ?? undefined,
+    tempTrend,
   };
 }
 
@@ -137,7 +183,19 @@ export async function fetchClimateAverage(
   const [, month, day] = date.split("-");
   const cacheKey = `${waypoint.lat},${waypoint.lon},${month},${day}`;
   const cached = (weatherCache.climateAverages as Record<string, WeatherData>)[cacheKey];
-  if (cached) return cached;
+
+  // Compute tempTrend by looking up the previous day in the cache
+  const { prevMM, prevDD } = prevCalendarMonthDay(month, day);
+  const prevCacheKey = `${waypoint.lat},${waypoint.lon},${prevMM},${prevDD}`;
+  const prevCached = (weatherCache.climateAverages as Record<string, { tempMax: number } | undefined>)[prevCacheKey];
+
+  if (cached) {
+    const tempTrend =
+      prevCached != null
+        ? Math.round((cached.tempMax - prevCached.tempMax) * 10) / 10
+        : undefined;
+    return { ...cached, tempTrend };
+  }
 
   const startYear = 2015;
   const endYear = 2024;
@@ -191,9 +249,15 @@ export async function fetchClimateAverage(
         )
       : 0;
 
+  const tempMax = Math.round(avg((r) => r.daily.temperature_2m_max[0]) * 10) / 10;
+  const tempTrend =
+    prevCached != null
+      ? Math.round((tempMax - prevCached.tempMax) * 10) / 10
+      : undefined;
+
   return {
     source: "climate-average",
-    tempMax: Math.round(avg((r) => r.daily.temperature_2m_max[0]) * 10) / 10,
+    tempMax,
     tempMin: Math.round(avg((r) => r.daily.temperature_2m_min[0]) * 10) / 10,
     feelsLikeMax: Math.round(avg((r) => r.daily.apparent_temperature_max?.[0]) * 10) / 10,
     feelsLikeMin: Math.round(avg((r) => r.daily.apparent_temperature_min?.[0]) * 10) / 10,
@@ -201,6 +265,8 @@ export async function fetchClimateAverage(
     windSpeed: Math.round(avg((r) => r.daily.wind_speed_10m_max[0]) * 10) / 10,
     windDirection: Math.round(avg((r) => r.daily.wind_direction_10m_dominant?.[0])),
     weatherCode,
+    uvIndex: Math.round(avg((r) => r.daily.uv_index_max?.[0]) * 10) / 10 || undefined,
+    tempTrend,
   };
 }
 
@@ -224,13 +290,16 @@ export async function fetchForecastWeatherHourly(
 ): Promise<WeatherData> {
   const { date, hour } = parseDatetime(datetime);
 
+  // Fetch prevDay + selectedDay in daily range for trend
+  const startDate = prevCalendarDay(date);
+
   const params = new URLSearchParams({
     latitude: String(waypoint.lat),
     longitude: String(waypoint.lon),
     ...(waypoint.altitude !== undefined ? { elevation: String(waypoint.altitude) } : {}),
     hourly: `${HOURLY_PARAMS},precipitation_probability`,
-    daily: "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min",
-    start_date: date,
+    daily: "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max",
+    start_date: startDate,
     end_date: date,
     timezone: "Europe/Oslo",
   });
@@ -239,24 +308,38 @@ export async function fetchForecastWeatherHourly(
   if (!res.ok) throw new Error(`Open-Meteo forecast error: ${res.status}`);
   const json = await res.json() as OpenMeteoHourlyResponse;
 
+  // Daily arrays: index 0 = prevDay, index 1 = selectedDay
+  // Hourly arrays: 48 entries (24h prevDay + 24h selectedDay); selectedDay hours start at 24
+  const dailyIdx = 1;
+  const hourlyOffset = 24; // second day starts at hour index 24
   const h = json.hourly;
-  // hourly arrays have 24 entries (one per hour); index matches the hour
+  const hi = hour + hourlyOffset;
+
+  const prevTempMax = json.daily.temperature_2m_max[0] ?? null;
+  const todayTempMax = json.daily.temperature_2m_max[dailyIdx] ?? 0;
+  const tempTrend =
+    prevTempMax !== null
+      ? Math.round((todayTempMax - prevTempMax) * 10) / 10
+      : undefined;
+
   return {
     source: "forecast",
-    tempMax: json.daily.temperature_2m_max[0] ?? 0,
-    tempMin: json.daily.temperature_2m_min[0] ?? 0,
-    feelsLikeMax: json.daily.apparent_temperature_max?.[0] ?? undefined,
-    feelsLikeMin: json.daily.apparent_temperature_min?.[0] ?? undefined,
-    precipitation: h.precipitation[hour] ?? 0,
-    windSpeed: h.wind_speed_10m[hour] ?? 0,
-    windDirection: h.wind_direction_10m?.[hour] ?? undefined,
-    weatherCode: h.weather_code[hour] ?? 0,
-    precipitationProbability: h.precipitation_probability?.[hour] ?? undefined,
-    hourlyTemp: h.temperature_2m[hour] ?? undefined,
-    hourlyFeelsLike: h.apparent_temperature?.[hour] ?? undefined,
-    hourlyPrecipitation: h.precipitation[hour] ?? 0,
-    hourlyWindSpeed: h.wind_speed_10m[hour] ?? 0,
-    hourlyWindDirection: h.wind_direction_10m?.[hour] ?? undefined,
+    tempMax: todayTempMax,
+    tempMin: json.daily.temperature_2m_min[dailyIdx] ?? 0,
+    feelsLikeMax: json.daily.apparent_temperature_max?.[dailyIdx] ?? undefined,
+    feelsLikeMin: json.daily.apparent_temperature_min?.[dailyIdx] ?? undefined,
+    precipitation: h.precipitation[hi] ?? 0,
+    windSpeed: h.wind_speed_10m[hi] ?? 0,
+    windDirection: h.wind_direction_10m?.[hi] ?? undefined,
+    weatherCode: h.weather_code[hi] ?? 0,
+    precipitationProbability: h.precipitation_probability?.[hi] ?? undefined,
+    uvIndex: json.daily.uv_index_max?.[dailyIdx] ?? undefined,
+    tempTrend,
+    hourlyTemp: h.temperature_2m[hi] ?? undefined,
+    hourlyFeelsLike: h.apparent_temperature?.[hi] ?? undefined,
+    hourlyPrecipitation: h.precipitation[hi] ?? 0,
+    hourlyWindSpeed: h.wind_speed_10m[hi] ?? 0,
+    hourlyWindDirection: h.wind_direction_10m?.[hi] ?? undefined,
   };
 }
 
@@ -270,6 +353,11 @@ export async function fetchClimateAverageHourly(
   const { date, hour } = parseDatetime(datetime);
   const [, month, day] = date.split("-");
 
+  // Look up prev day in cache for trend
+  const { prevMM, prevDD } = prevCalendarMonthDay(month, day);
+  const prevCacheKey = `${waypoint.lat},${waypoint.lon},${prevMM},${prevDD}`;
+  const prevCached = (weatherCache.climateAverages as Record<string, { tempMax: number } | undefined>)[prevCacheKey];
+
   const startYear = 2015;
   const endYear = 2024;
 
@@ -281,7 +369,7 @@ export async function fetchClimateAverageHourly(
       longitude: String(waypoint.lon),
       ...(waypoint.altitude !== undefined ? { elevation: String(waypoint.altitude) } : {}),
       hourly: HOURLY_PARAMS,
-      daily: "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min",
+      daily: "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max",
       start_date: d,
       end_date: d,
       timezone: "Europe/Oslo",
@@ -331,10 +419,17 @@ export async function fetchClimateAverageHourly(
   const hourlyPrecipitation = Math.round(avgHourly((r) => r.hourly.precipitation[hour]) * 10) / 10;
   const hourlyWindSpeed = Math.round(avgHourly((r) => r.hourly.wind_speed_10m[hour]) * 10) / 10;
   const hourlyWindDirection = Math.round(avgHourly((r) => r.hourly.wind_direction_10m[hour]));
+  const tempMax = Math.round(avgDaily((r) => r.daily.temperature_2m_max[0]) * 10) / 10;
+  const uvRaw = Math.round(avgDaily((r) => r.daily.uv_index_max?.[0]) * 10) / 10;
+
+  const tempTrend =
+    prevCached != null
+      ? Math.round((tempMax - prevCached.tempMax) * 10) / 10
+      : undefined;
 
   return {
     source: "climate-average",
-    tempMax: Math.round(avgDaily((r) => r.daily.temperature_2m_max[0]) * 10) / 10,
+    tempMax,
     tempMin: Math.round(avgDaily((r) => r.daily.temperature_2m_min[0]) * 10) / 10,
     feelsLikeMax: Math.round(avgDaily((r) => r.daily.apparent_temperature_max?.[0]) * 10) / 10,
     feelsLikeMin: Math.round(avgDaily((r) => r.daily.apparent_temperature_min?.[0]) * 10) / 10,
@@ -342,6 +437,8 @@ export async function fetchClimateAverageHourly(
     windSpeed: hourlyWindSpeed,
     windDirection: hourlyWindDirection,
     weatherCode,
+    uvIndex: uvRaw > 0 ? uvRaw : undefined,
+    tempTrend,
     hourlyTemp,
     hourlyFeelsLike,
     hourlyPrecipitation,

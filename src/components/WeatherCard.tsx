@@ -45,6 +45,32 @@ function warningClasses(data: WeatherData, routeBearing?: number): string[] {
   return classes;
 }
 
+/** UV index → Norwegian level label + CSS modifier */
+function uvLevel(uv: number): { label: string; mod: string } {
+  if (uv >= 11) return { label: "Ekstremt", mod: "extreme" };
+  if (uv >= 8)  return { label: "Veldig høy", mod: "very-high" };
+  if (uv >= 6)  return { label: "Høy", mod: "high" };
+  if (uv >= 3)  return { label: "Moderat", mod: "moderate" };
+  return { label: "Lav", mod: "low" };
+}
+
+/** Wet road / ice risk based on temperature and precipitation */
+function roadRisk(data: WeatherData): "ice" | "slush" | "wet" | null {
+  const temp = data.hourlyTemp ?? data.tempMin;
+  const precip = data.hourlyPrecipitation ?? data.precipitation;
+  if (precip <= 0) return null;
+  if (temp < 0)                    return "ice";
+  if (temp < 3 && precip > 0.5)   return "slush";
+  if (temp >= 3 && precip > 2)    return "wet";
+  return null;
+}
+
+const ROAD_RISK_LABELS: Record<"ice" | "slush" | "wet", { icon: string; label: string }> = {
+  ice:   { icon: "❄️", label: "Isfare" },
+  slush: { icon: "⚠️", label: "Glatt vei" },
+  wet:   { icon: "💧", label: "Fuktig vei" },
+};
+
 export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, routeBearing }: Props) {
   const { label } = waypoint;
 
@@ -102,6 +128,18 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, r
         // Actual temp for display
         const showHourly = data.hourlyTemp != null;
 
+        // Temperature trend — only show when difference is ≥ 0.5°
+        const trend =
+          data.tempTrend != null && Math.abs(data.tempTrend) >= 0.5
+            ? data.tempTrend
+            : null;
+
+        // UV index — only show when UV is notable (≥ 3)
+        const showUv = data.uvIndex != null && data.uvIndex >= 3;
+
+        // Road risk
+        const risk = roadRisk(data);
+
         return (
           <>
             {data.source === "climate-average" && (
@@ -119,6 +157,14 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, r
                   <span className="weather-card__temp-min">{data.tempMin}°</span>
                 </>
               )}
+              {trend !== null && (
+                <span
+                  className={`weather-card__trend weather-card__trend--${trend > 0 ? "up" : "down"}`}
+                  title={`${trend > 0 ? "Varmere" : "Kaldere"} enn i går (${trend > 0 ? "+" : ""}${trend}°)`}
+                >
+                  {trend > 0 ? "↑" : "↓"}{trend > 0 ? "+" : ""}{trend}°
+                </span>
+              )}
             </div>
             {feelsLike != null && (
               <div className="weather-card__feels-like">
@@ -132,6 +178,11 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, r
                   <span className="weather-card__precip-prob"> · {data.precipitationProbability}%</span>
                 )}
               </span>
+              {risk && (
+                <span className={`weather-card__road-risk weather-card__road-risk--${risk}`}>
+                  {ROAD_RISK_LABELS[risk].icon} {ROAD_RISK_LABELS[risk].label}
+                </span>
+              )}
             </div>
             <div className="weather-card__detail">
               <span title="Vind">
@@ -150,6 +201,13 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, r
                 )}
               </span>
             </div>
+            {showUv && (
+              <div className="weather-card__detail">
+                <span className={`weather-card__uv weather-card__uv--${uvLevel(data.uvIndex!).mod}`}>
+                  ☀️ UV {data.uvIndex} · {uvLevel(data.uvIndex!).label}
+                </span>
+              </div>
+            )}
           </>
         );
       })()}

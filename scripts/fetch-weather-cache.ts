@@ -43,6 +43,7 @@ type WeatherEntry = {
   precipitation: number;
   windSpeed: number;
   weatherCode: number;
+  uvIndex?: number;
 };
 
 type WeatherCache = {
@@ -59,7 +60,7 @@ type WeatherCache = {
 
 const ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive";
 const DAILY_PARAMS =
-  "temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weather_code";
+  "temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weather_code,uv_index_max";
 const START_YEAR = 2015;
 const END_YEAR = 2024;
 const CONCURRENCY = 2; // max parallel requests (Open-Meteo free tier: gentle rate limit)
@@ -113,6 +114,7 @@ type RawDailyResult = {
   precipitation: number | null;
   windSpeed: number | null;
   weatherCode: number | null;
+  uvIndex: number | null;
 };
 
 async function fetchArchiveDay(
@@ -152,6 +154,7 @@ async function fetchArchiveDay(
         precipitation: d.precipitation_sum?.[0] ?? null,
         windSpeed: d.wind_speed_10m_max?.[0] ?? null,
         weatherCode: d.weather_code?.[0] ?? null,
+        uvIndex: d.uv_index_max?.[0] ?? null,
       };
     } catch (err) {
       if (attempt < retries) {
@@ -242,6 +245,7 @@ async function main() {
         precipitation: result.precipitation ?? 0,
         windSpeed: result.windSpeed ?? 0,
         weatherCode: result.weatherCode ?? 0,
+        ...(result.uvIndex !== null ? { uvIndex: result.uvIndex } : {}),
       };
     }
 
@@ -275,11 +279,14 @@ async function main() {
             precipitation: entry.precipitation,
             windSpeed: entry.windSpeed,
             weatherCode: entry.weatherCode,
+            uvIndex: entry.uvIndex ?? null,
           });
         }
       }
 
       if (yearlyData.length === 0) continue;
+
+      const uvAvg = average(yearlyData.map((d) => d.uvIndex));
 
       cache.climateAverages[cKey] = {
         source: "climate-average",
@@ -288,6 +295,7 @@ async function main() {
         precipitation: average(yearlyData.map((d) => d.precipitation)),
         windSpeed: average(yearlyData.map((d) => d.windSpeed)),
         weatherCode: statisticalMode(yearlyData.map((d) => d.weatherCode)),
+        ...(uvAvg > 0 ? { uvIndex: uvAvg } : {}),
       };
     }
   }

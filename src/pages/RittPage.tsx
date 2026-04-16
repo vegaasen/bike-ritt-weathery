@@ -185,6 +185,7 @@ export function RittPage() {
             setFinishTime("");
           }}
           distanceKm={rittData.distance}
+          officialStartTime={rittData.officialStartTime}
         />
       </section>
 
