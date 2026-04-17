@@ -1,12 +1,14 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HomePage } from "./pages/HomePage";
-import { RittPage } from "./pages/RittPage";
-import { NotFoundPage } from "./pages/NotFoundPage";
 import { NavBar } from "./components/NavBar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ReloadPrompt } from "./components/ReloadPrompt";
 import { usePageTracking } from "./hooks/usePageTracking";
+
+const RittPage = lazy(() => import("./pages/RittPage").then((m) => ({ default: m.RittPage })));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
 
 const queryClient = new QueryClient();
 
@@ -48,11 +50,13 @@ function RouterContent() {
   return (
     <>
       <NavBar />
-      <Routes>
-        <Route index element={<HomePage />} />
-        <Route path="/ritt/:id" element={<RittPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route index element={<HomePage />} />
+          <Route path="/ritt/:id" element={<RittPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
       <SiteFooter />
     </>
   );

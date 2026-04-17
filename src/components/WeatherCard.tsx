@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { WeatherData } from "../lib/weather";
 import { describeWeatherCode } from "../lib/wmo";
 import type { Waypoint } from "../lib/weather";
@@ -71,7 +72,7 @@ const ROAD_RISK_LABELS: Record<"ice" | "slush" | "wet", { icon: string; label: s
   wet:   { icon: "💧", label: "Fuktig vei" },
 };
 
-export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, routeBearing }: Props) {
+export const WeatherCard = memo(function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, routeBearing }: Props) {
   const { label } = waypoint;
 
   const extraClasses =
@@ -217,4 +218,4 @@ export function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, r
       )}
     </div>
   );
-}
+});

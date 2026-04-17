@@ -26,16 +26,17 @@ function getNextRittId(): string {
   return upcoming[0]?.id ?? ritt[0]?.id ?? "";
 }
 
+// Computed once at module load — both are derived from static ritt.json data.
+const grouped = groupByYear(ritt);
+const years = [...grouped.keys()].sort((a, b) => b - a);
+const nextId = getNextRittId();
+
 export function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const match = location.pathname.match(/^\/ritt\/([^/]+)/);
   const currentId = match ? match[1] : "";
-
-  const grouped = groupByYear(ritt);
-  const years = [...grouped.keys()].sort((a, b) => b - a);
-  const nextId = getNextRittId();
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value;

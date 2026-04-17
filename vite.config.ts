@@ -63,4 +63,19 @@ export default defineConfig({
   server: {
     open: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/leaflet")) return "vendor-leaflet";
+          if (id.includes("node_modules/@tanstack")) return "vendor-query";
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/react-router")
+          ) return "vendor-react";
+        },
+      },
+    },
+  },
 })

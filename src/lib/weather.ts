@@ -1,4 +1,18 @@
-import weatherCache from "../data/weather-cache.json";
+type WeatherCacheData = {
+  climateAverages: Record<string, WeatherData>;
+  historicalByYear: Record<string, WeatherData>;
+};
+
+let _cachePromise: Promise<WeatherCacheData> | null = null;
+
+function getWeatherCache(): Promise<WeatherCacheData> {
+  if (!_cachePromise) {
+    _cachePromise = import("../data/weather-cache.json").then(
+      (m) => m.default as unknown as WeatherCacheData
+    );
+  }
+  return _cachePromise;
+}
 
 export type Waypoint = {
   label: string;
@@ -182,7 +196,8 @@ export async function fetchClimateAverage(
 ): Promise<WeatherData> {
   const [, month, day] = date.split("-");
   const cacheKey = `${waypoint.lat},${waypoint.lon},${month},${day}`;
-  const cached = (weatherCache.climateAverages as Record<string, WeatherData>)[cacheKey];
+  const weatherCache = await getWeatherCache();
+  const cached = weatherCache.climateAverages[cacheKey];
 
   // Compute tempTrend by looking up the previous day in the cache
   const { prevMM, prevDD } = prevCalendarMonthDay(month, day);
@@ -356,6 +371,7 @@ export async function fetchClimateAverageHourly(
   // Look up prev day in cache for trend
   const { prevMM, prevDD } = prevCalendarMonthDay(month, day);
   const prevCacheKey = `${waypoint.lat},${waypoint.lon},${prevMM},${prevDD}`;
+  const weatherCache = await getWeatherCache();
   const prevCached = (weatherCache.climateAverages as Record<string, { tempMax: number } | undefined>)[prevCacheKey];
 
   const startYear = 2015;

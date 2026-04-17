@@ -1,11 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { fetchWeather } from "../lib/weather";
 import { describeWeatherCode } from "../lib/wmo";
 import type { Waypoint, WeatherData } from "../lib/weather";
-import weatherCache from "../data/weather-cache.json";
 
-const historicalByYear = weatherCache.historicalByYear as Record<string, WeatherData>;
 
 type Props = {
   waypoints: Waypoint[];
@@ -32,26 +30,41 @@ function mode<T>(arr: T[]): T | undefined {
 
 export function HistoricalWeatherTable({ waypoints, officialDate }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [historicalByYear, setHistoricalByYear] = useState<Record<string, WeatherData> | null>(null);
+
+  useEffect(() => {
+    if (isOpen && historicalByYear === null) {
+      void import("../data/weather-cache.json").then((m) => {
+        const cache = m.default as { historicalByYear: Record<string, WeatherData> };
+        setHistoricalByYear(cache.historicalByYear);
+      });
+    }
+  }, [isOpen, historicalByYear]);
 
   const [, mm, dd] = officialDate.split("-");
 
   // One query per (year × waypoint) = 10 × 5 = 50 queries max
+  // Only build definitions once we have the cache (or isOpen with no cache hit needed).
   // Flat array: year 0 wp 0, year 0 wp 1, ..., year 1 wp 0, ...
   // Cache key for historicalByYear: "lat,lon,MM,DD,YYYY"
-  const queryDefs = HISTORY_YEARS.flatMap((year) =>
-    waypoints.map((wp) => {
-      const date = `${year}-${mm}-${dd}`;
-      const cacheKey = `${wp.lat},${wp.lon},${mm},${dd},${year}`;
-      const cachedData = historicalByYear[cacheKey];
-      return {
-        queryKey: ["weather-history", wp.lat, wp.lon, date] as const,
-        queryFn: () => fetchWeather(wp, date),
-        staleTime: Infinity,
-        retry: 1,
-        enabled: isOpen && !cachedData,
-        initialData: cachedData,
-      };
-    })
+  const queryDefs = useMemo(
+    () =>
+      HISTORY_YEARS.flatMap((year) =>
+        waypoints.map((wp) => {
+          const date = `${year}-${mm}-${dd}`;
+          const cacheKey = `${wp.lat},${wp.lon},${mm},${dd},${year}`;
+          const cachedData = historicalByYear?.[cacheKey];
+          return {
+            queryKey: ["weather-history", wp.lat, wp.lon, date] as const,
+            queryFn: () => fetchWeather(wp, date),
+            staleTime: Infinity,
+            retry: 1,
+            enabled: isOpen && !cachedData,
+            initialData: cachedData,
+          };
+        })
+      ),
+    [waypoints, mm, dd, isOpen, historicalByYear]
   );
 
   const results = useQueries({ queries: queryDefs });
