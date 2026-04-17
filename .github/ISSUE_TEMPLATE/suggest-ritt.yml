@@ -1,5 +1,5 @@
 name: Foreslå ett ritt
-description: Foreslå et norsk sykkelritt som mangler i Rittvær
+description: Foreslå et norsk sykkelritt som mangler i Startstreken
 title: "Forslag: [Ritt-navn]"
 labels: ["suggestion"]
 body:

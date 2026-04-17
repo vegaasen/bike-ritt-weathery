@@ -6,6 +6,7 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 import { NavBar } from "./components/NavBar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ReloadPrompt } from "./components/ReloadPrompt";
+import { usePageTracking } from "./hooks/usePageTracking";
 
 const queryClient = new QueryClient();
 
@@ -36,18 +37,27 @@ function SiteFooter() {
   );
 }
 
+function RouterContent() {
+  usePageTracking();
+  return (
+    <>
+      <NavBar />
+      <Routes>
+        <Route index element={<HomePage />} />
+        <Route path="/ritt/:id" element={<RittPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+      <SiteFooter />
+    </>
+  );
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
-          <NavBar />
-          <Routes>
-            <Route index element={<HomePage />} />
-            <Route path="/ritt/:id" element={<RittPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-          <SiteFooter />
+          <RouterContent />
         </BrowserRouter>
         <ReloadPrompt />
       </QueryClientProvider>

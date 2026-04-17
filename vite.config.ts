@@ -17,8 +17,8 @@ export default defineConfig({
         enabled: true,
       },
       manifest: {
-        name: 'Startstreken – Rittvær',
-        short_name: 'Rittvær',
+        name: 'Startstreken',
+        short_name: 'Startstreken',
         description: 'Sjekk været langs ruten for norske sykkelritt og langrenn.',
         theme_color: '#aa3bff',
         background_color: '#ffffff',
