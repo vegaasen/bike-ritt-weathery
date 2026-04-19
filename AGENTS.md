@@ -4,7 +4,7 @@ Guidelines for AI coding agents working in this repository.
 
 ## What this project is
 
-**Rittvær** is a React + TypeScript single-page app that shows weather forecasts and historical climate averages at key waypoints along Norwegian cycling races. It uses the free [Open-Meteo](https://open-meteo.com) API — no API key needed. The app is deployed to GitHub Pages.
+**Startstreken** is a React + TypeScript single-page app that shows weather forecasts and historical climate averages at key waypoints along Norwegian endurance races — sykkelritt, langrenn, triathlon, and ultraløp. It uses the free [Open-Meteo](https://open-meteo.com) API — no API key needed. The app is deployed to GitHub Pages at [vegaasen.github.io/startstreken](https://vegaasen.github.io/startstreken/).
 
 ## Commands
 
@@ -50,13 +50,17 @@ Edit `src/data/ritt.json`. Each entry must follow the existing schema:
 
 ```jsonc
 {
-  "id": "kebab-case-id",          // used in the URL: /ritt/<id>
+  "id": "kebab-case-id",            // used in the URL: /ritt/<id>
   "name": "Ritt Name",
-  "distance": 88,                  // km
+  "discipline": "landevei",         // "landevei" or "terreng"
+  "distance": 88,                   // km
+  "elevationGain": 1200,            // metres
   "region": "Innlandet",
-  "officialDate": "2025-08-23",   // ISO date, update each season
-  "waypoints": [                   // exactly 5 entries: start, 3 intermediate, finish
-    { "name": "Start", "lat": 60.123, "lng": 10.456, "altitude": 200, "km": 0 },
+  "officialDate": "2025-08-23",     // ISO date, update each season
+  "officialStartTime": "08:00",     // optional HH:MM
+  "url": "https://example.no/",     // optional race website
+  "waypoints": [
+    { "label": "Start – Rena", "lat": 60.123, "lon": 10.456, "altitude": 200 },
     ...
   ]
 }
