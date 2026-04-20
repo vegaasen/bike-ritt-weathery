@@ -818,6 +818,42 @@ code {
   }
 }
 
+.ritt-card__discipline--langrenn {
+  background: color-mix(in srgb, #3a7fc1 12%, transparent);
+  color: #3a7fc1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ritt-card__discipline--langrenn {
+    background: color-mix(in srgb, #6fb3f5 12%, transparent);
+    color: #6fb3f5;
+  }
+}
+
+.ritt-card__discipline--triathlon {
+  background: color-mix(in srgb, #1a9a8a 12%, transparent);
+  color: #1a9a8a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ritt-card__discipline--triathlon {
+    background: color-mix(in srgb, #3dd6c0 12%, transparent);
+    color: #3dd6c0;
+  }
+}
+
+.ritt-card__discipline--ultraløp {
+  background: color-mix(in srgb, #7a5c3e 12%, transparent);
+  color: #7a5c3e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ritt-card__discipline--ultraløp {
+    background: color-mix(in srgb, #b89070 12%, transparent);
+    color: #b89070;
+  }
+}
+
 /* ─── Difficulty badge (shared colours) ─────────────────────────────── */
 
 .ritt-card__difficulty,
