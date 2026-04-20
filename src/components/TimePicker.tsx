@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { calcFinishTimeFromSpeed } from "../lib/timing";
 
 const SPEED_OPTIONS = [15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40] as const;
@@ -25,10 +26,12 @@ export function TimePicker({
 }: Props) {
   const hasValues = startTime !== "" || finishTime !== "";
   const timingActive = startTime !== "" && finishTime !== "";
+  const [selectedSpeed, setSelectedSpeed] = useState("");
 
   function handleSpeedChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const speed = Number(e.target.value);
     if (!speed || !startTime || !distanceKm) return;
+    setSelectedSpeed(e.target.value);
     const computed = calcFinishTimeFromSpeed(startTime, distanceKm, speed);
     onFinishChange(computed);
   }
@@ -66,7 +69,7 @@ export function TimePicker({
             <select
               id="ritt-speed"
               className="time-picker__input time-picker__speed-select"
-              defaultValue=""
+              value={startTime ? selectedSpeed : ""}
               onChange={handleSpeedChange}
               disabled={!startTime}
             >

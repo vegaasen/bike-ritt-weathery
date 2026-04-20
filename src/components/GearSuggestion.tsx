@@ -1,6 +1,5 @@
 import type { WaypointWeather } from "../hooks/useWeather";
-import { windRelativeLabel } from "../lib/wind";
-import { routeBearingForWaypoint } from "../lib/wind";
+import { windRelativeLabel, routeBearingForWaypoint } from "../lib/wind";
 import type { Waypoint } from "../lib/weather";
 
 type Suggestion = {

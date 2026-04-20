@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { fetchWeather } from "../lib/weather";
+import { fetchWeather, getWeatherCache } from "../lib/weather";
 import { describeWeatherCode } from "../lib/wmo";
 import type { Waypoint, WeatherData } from "../lib/weather";
-
 
 type Props = {
   waypoints: Waypoint[];
@@ -29,22 +28,34 @@ function mode<T>(arr: T[]): T | undefined {
 }
 
 export function HistoricalWeatherTable({ waypoints, officialDate }: Props) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [historicalByYear, setHistoricalByYear] = useState<Record<string, WeatherData> | null>(null);
 
+  // Use the toggle event (fires after browser commits open state) instead of
+  // inferring next state from onClick — avoids off-by-one on rapid clicks.
   useEffect(() => {
-    if (isOpen && historicalByYear === null) {
-      void import("../data/weather-cache.json").then((m) => {
-        const cache = m.default as { historicalByYear: Record<string, WeatherData> };
+    const el = detailsRef.current;
+    if (!el) return;
+    const handler = () => setIsOpen(el.open);
+    el.addEventListener("toggle", handler);
+    return () => el.removeEventListener("toggle", handler);
+  }, []);
+
+  // Load the weather cache eagerly on mount so it is ready before the
+  // details panel is opened. This prevents all 50 queries from firing live
+  // on first open while the cache JSON is still being parsed.
+  useEffect(() => {
+    if (historicalByYear === null) {
+      void getWeatherCache().then((cache) => {
         setHistoricalByYear(cache.historicalByYear);
       });
     }
-  }, [isOpen, historicalByYear]);
+  }, [historicalByYear]);
 
   const [, mm, dd] = officialDate.split("-");
 
-  // One query per (year × waypoint) = 10 × 5 = 50 queries max
-  // Only build definitions once we have the cache (or isOpen with no cache hit needed).
+  // One query per (year × waypoint) = 10 × 5 = 50 queries max.
   // Flat array: year 0 wp 0, year 0 wp 1, ..., year 1 wp 0, ...
   // Cache key for historicalByYear: "lat,lon,MM,DD,YYYY"
   const queryDefs = useMemo(
@@ -74,12 +85,14 @@ export function HistoricalWeatherTable({ waypoints, officialDate }: Props) {
     const wpResults = waypoints.map((_, wi) => results[yi * waypoints.length + wi]);
     const allLoading = wpResults.some((r) => r.isLoading);
     const allError = wpResults.every((r) => r.isError);
+    const anyError = !allError && wpResults.some((r) => r.isError);
     const datas = wpResults.map((r) => r.data);
 
     return {
       year,
       isLoading: allLoading,
       isError: allError,
+      isPartialError: anyError,
       tempMax: avg(datas.map((d) => d?.tempMax)),
       tempMin: avg(datas.map((d) => d?.tempMin)),
       precipitation: avg(datas.map((d) => d?.precipitation)),
@@ -88,14 +101,9 @@ export function HistoricalWeatherTable({ waypoints, officialDate }: Props) {
     };
   });
 
-  function handleToggle(e: React.MouseEvent<HTMLElement>) {
-    const details = e.currentTarget.closest("details");
-    if (details) setIsOpen(!details.open);
-  }
-
   return (
-    <details className="history-table__details">
-      <summary className="history-table__summary" onClick={handleToggle}>
+    <details ref={detailsRef} className="history-table__details">
+      <summary className="history-table__summary">
         Historisk vær på startdagen (2015–2024)
       </summary>
       <div className="history-table__wrapper">
@@ -126,6 +134,9 @@ export function HistoricalWeatherTable({ waypoints, officialDate }: Props) {
                     <td>{row.windSpeed != null ? `${Math.round(row.windSpeed * 10) / 10}` : "–"}</td>
                     <td className="history-table__icon">
                       {row.weatherCode != null ? describeWeatherCode(row.weatherCode).emoji : "–"}
+                      {row.isPartialError && (
+                        <span className="history-table__partial-error" title="Data mangler for noen målepunkter">⚠</span>
+                      )}
                     </td>
                   </>
                 )}

@@ -48,7 +48,21 @@ export default defineConfig({
             options: {
               cacheName: 'open-meteo-api',
               expiration: {
-                maxEntries: 50,
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 48, // 48 hours
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/archive-api\.open-meteo\.com\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'open-meteo-archive',
+              expiration: {
+                maxEntries: 200,
                 maxAgeSeconds: 60 * 60 * 48, // 48 hours
               },
               cacheableResponse: {

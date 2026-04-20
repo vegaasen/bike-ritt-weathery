@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Waypoint } from "../lib/weather";
+import type { Discipline } from "../lib/ritt";
 
 type Props = {
   waypoints: Waypoint[];
   name: string;
+  discipline: Discipline;
 };
 
 type OsrmRoute = {
@@ -13,10 +15,26 @@ type OsrmRoute = {
   };
 };
 
-async function fetchOsrmRoute(waypoints: Waypoint[]): Promise<[number, number][]> {
+/** Maps discipline to the best available OSRM routing profile. */
+function osrmProfile(discipline: Discipline): string {
+  switch (discipline) {
+    case "landevei":
+      return "bike"; // road cycling — bike profile is closest
+    case "terreng":
+      return "bike"; // MTB — bike profile
+    case "langrenn":
+    case "ultraløp":
+      return "foot"; // ski/running use pedestrian/foot routing
+    case "triathlon":
+      return "foot"; // mixed; foot is safest fallback for swim/run legs
+  }
+}
+
+async function fetchOsrmRoute(waypoints: Waypoint[], discipline: Discipline): Promise<[number, number][]> {
   // OSRM expects lon,lat pairs
   const coords = waypoints.map((w) => `${w.lon},${w.lat}`).join(";");
-  const url = `https://router.project-osrm.org/route/v1/bike/${coords}?overview=full&geometries=geojson`;
+  const profile = osrmProfile(discipline);
+  const url = `https://router.project-osrm.org/route/v1/${profile}/${coords}?overview=full&geometries=geojson`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`OSRM error: ${res.status}`);
   const json = await res.json() as { routes?: OsrmRoute[] };
@@ -26,16 +44,27 @@ async function fetchOsrmRoute(waypoints: Waypoint[]): Promise<[number, number][]
   return route.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
 }
 
-export function RittMap({ waypoints, name }: Props) {
+export function RittMap({ waypoints, name, discipline }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   // Keep a ref to the Leaflet map instance so we can destroy it on unmount
   // We import Leaflet dynamically to avoid SSR issues and because it needs the DOM
   const leafletMapRef = useRef<import("leaflet").Map | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Use the toggle event (fires after browser commits open state) instead of
+  // inferring next state from onClick — avoids off-by-one on rapid clicks.
+  useEffect(() => {
+    const el = detailsRef.current;
+    if (!el) return;
+    const handler = () => setIsOpen(el.open);
+    el.addEventListener("toggle", handler);
+    return () => el.removeEventListener("toggle", handler);
+  }, []);
+
   const { data: routeCoords, isError: routeError } = useQuery({
-    queryKey: ["osrm-route", waypoints.map((w) => `${w.lat},${w.lon}`).join("|")],
-    queryFn: () => fetchOsrmRoute(waypoints),
+    queryKey: ["osrm-route", waypoints.map((w) => `${w.lat},${w.lon}`).join("|"), discipline],
+    queryFn: () => fetchOsrmRoute(waypoints, discipline),
     staleTime: Infinity,
     retry: 1,
     enabled: isOpen,
@@ -112,19 +141,9 @@ export function RittMap({ waypoints, name }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, polylineCoords]);
 
-  function handleToggle(e: React.MouseEvent<HTMLElement>) {
-    // <details> toggles natively; we track state to trigger map init
-    const details = e.currentTarget.closest("details");
-    if (details) {
-      // The toggle hasn't happened yet when onClick fires on <summary>,
-      // so we check the current open attr and flip it
-      setIsOpen(!details.open);
-    }
-  }
-
   return (
-    <details className="ritt-map__details">
-      <summary className="ritt-map__summary" onClick={handleToggle}>
+    <details ref={detailsRef} className="ritt-map__details">
+      <summary className="ritt-map__summary">
         Kart over ruten — {name}
         {routeError && (
           <span className="ritt-map__fallback-note"> (rett-linje)</span>

@@ -1,4 +1,5 @@
-import { useWeather, isForecastRange } from "../hooks/useWeather";
+import { useWeather } from "../hooks/useWeather";
+import { isForecastRange } from "../lib/weather";
 import { WeatherCard } from "./WeatherCard";
 import type { Waypoint } from "../lib/weather";
 import { calcWaypointTimes, formatArrivalTime, WAYPOINT_FRACTIONS } from "../lib/timing";

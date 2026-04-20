@@ -9,15 +9,25 @@ type Props = {
 type State = {
   hasError: boolean;
   error: Error | null;
+  /** Incremented on retry to force a full remount of children. */
+  resetKey: number;
 };
+
+/**
+ * Thin wrapper whose sole purpose is to receive a `key` prop so that
+ * incrementing `resetKey` forces React to unmount + remount the child tree.
+ */
+function ChildrenContainer({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, resetKey: 0 };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
@@ -35,7 +45,9 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
             <button
               className="error-boundary__retry"
-              onClick={() => this.setState({ hasError: false, error: null })}
+              onClick={() =>
+                this.setState((s) => ({ hasError: false, error: null, resetKey: s.resetKey + 1 }))
+              }
             >
               Prøv igjen
             </button>
@@ -44,6 +56,10 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return (
+      <ChildrenContainer key={this.state.resetKey}>
+        {this.props.children}
+      </ChildrenContainer>
+    );
   }
 }

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { type Discipline } from "../lib/ritt";
 
 type Props = {
   id: string;
@@ -14,8 +15,6 @@ type Props = {
   /** Countdown string, e.g. "om 3 dager" or "i dag" */
   countdown?: string;
 };
-
-type Discipline = "landevei" | "terreng" | "langrenn" | "triathlon" | "ultraløp";
 
 const DISCIPLINE_LABEL: Record<Discipline, string> = {
   landevei: "Landevei",
@@ -38,7 +37,7 @@ export function RittCard({
   countdown,
 }: Props) {
   const dateStr = displayDate ?? officialDate;
-  const formattedDate = new Date(dateStr).toLocaleDateString("nb-NO", {
+  const formattedDate = new Date(dateStr + "T00:00:00").toLocaleDateString("nb-NO", {
     day: "numeric",
     month: "long",
     year: "numeric",

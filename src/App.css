@@ -1,1 +1,13 @@
 /* App.css — intentionally minimal until design system is chosen */
+
+.page-loading {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent, #aa3bff), transparent);
+  background-size: 200% 100%;
+  animation: page-loading-sweep 1.2s ease-in-out infinite;
+}
+
+@keyframes page-loading-sweep {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}

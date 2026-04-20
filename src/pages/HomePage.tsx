@@ -3,18 +3,17 @@ import { Link } from "react-router-dom";
 import { RittCard } from "../components/RittCard";
 import { useMyRitt } from "../hooks/useMyRitt";
 import { usePageTitle } from "../hooks/usePageTitle";
-import ritt from "../data/arrangements.json";
+import { allArrangements as ritt, getNextRitt, type RittEntry } from "../lib/ritt";
 
-type Race = (typeof ritt)[number];
 type Discipline = "alle" | "landevei" | "terreng" | "langrenn" | "triathlon" | "ultraløp";
 
-function groupByYearMonth(races: Race[]): Map<number, Map<number, Race[]>> {
+function groupByYearMonth(races: RittEntry[]): Map<number, Map<number, RittEntry[]>> {
   const sorted = [...races].sort(
-    (a, b) => new Date(a.officialDate).getTime() - new Date(b.officialDate).getTime()
+    (a, b) => new Date(a.officialDate + "T00:00:00").getTime() - new Date(b.officialDate + "T00:00:00").getTime()
   );
-  const grouped = new Map<number, Map<number, Race[]>>();
+  const grouped = new Map<number, Map<number, RittEntry[]>>();
   for (const race of sorted) {
-    const d = new Date(race.officialDate);
+    const d = new Date(race.officialDate + "T00:00:00");
     const year = d.getFullYear();
     const month = d.getMonth();
     if (!grouped.has(year)) grouped.set(year, new Map());
@@ -32,8 +31,7 @@ function monthName(month: number): string {
 function daysUntil(dateStr: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr);
-  target.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr + "T00:00:00");
   return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
@@ -44,14 +42,6 @@ function formatCountdown(dateStr: string): string {
   if (diff === -1) return "i går";
   if (diff > 0) return `om ${diff} dager`;
   return `${Math.abs(diff)} dager siden`;
-}
-
-function getNextRitt(): Race | undefined {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return [...ritt]
-    .filter((r) => new Date(r.officialDate) >= today)
-    .sort((a, b) => new Date(a.officialDate).getTime() - new Date(b.officialDate).getTime())[0];
 }
 
 const DISCIPLINE_LABELS: Record<Discipline, string> = {
@@ -75,29 +65,44 @@ export function HomePage() {
   const totalTriathlon = useMemo(() => ritt.filter((r) => r.discipline === "triathlon").length, []);
 
   const searchQuery = search.trim().toLowerCase();
-  const filtered = ritt
-    .filter((r) => discipline === "alle" || r.discipline === discipline)
-    .filter((r) => !searchQuery || r.name.toLowerCase().includes(searchQuery));
-  const grouped = groupByYearMonth(filtered);
-  const years = [...grouped.keys()].sort((a, b) => b - a);
 
-  const upcomingRaces = filtered
-    .filter((r) => {
-      const days = daysUntil(r.officialDate);
-      return days >= 0 && days <= 14;
-    })
-    .sort((a, b) => new Date(a.officialDate).getTime() - new Date(b.officialDate).getTime());
+  const filtered = useMemo(
+    () =>
+      ritt
+        .filter((r) => discipline === "alle" || r.discipline === discipline)
+        .filter((r) => !searchQuery || r.name.toLowerCase().includes(searchQuery)),
+    [discipline, searchQuery]
+  );
 
-  const plannedRaces = plannedIds
-    .map((id) => ritt.find((r) => r.id === id))
-    .filter((r): r is Race => r !== undefined)
-    .sort((a, b) => {
-      const da = getPlanned(a.id)?.date ?? a.officialDate;
-      const db = getPlanned(b.id)?.date ?? b.officialDate;
-      return new Date(da).getTime() - new Date(db).getTime();
-    });
+  const grouped = useMemo(() => groupByYearMonth(filtered), [filtered]);
+  const years = useMemo(() => [...grouped.keys()].sort((a, b) => b - a), [grouped]);
 
-  const nextRitt = getNextRitt();
+  const upcomingRaces = useMemo(
+    () =>
+      filtered
+        .filter((r) => {
+          const days = daysUntil(r.officialDate);
+          return days >= 0 && days <= 14;
+        })
+        .sort((a, b) => new Date(a.officialDate + "T00:00:00").getTime() - new Date(b.officialDate + "T00:00:00").getTime()),
+    [filtered]
+  );
+
+  const plannedRaces = useMemo(
+    () =>
+      plannedIds
+        .map((id) => ritt.find((r) => r.id === id))
+        .filter((r): r is RittEntry => r !== undefined)
+        .sort((a, b) => {
+          const da = getPlanned(a.id)?.date ?? a.officialDate;
+          const db = getPlanned(b.id)?.date ?? b.officialDate;
+          return new Date(da + "T00:00:00").getTime() - new Date(db + "T00:00:00").getTime();
+        }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [plannedIds]
+  );
+
+  const nextRitt = getNextRitt(ritt);
 
   function handleToggle(id: string, officialDate: string, e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
@@ -218,7 +223,7 @@ export function HomePage() {
                   officialDate={r.officialDate}
                   distance={r.distance}
                   region={r.region}
-                  discipline={r.discipline as "landevei" | "terreng" | "langrenn" | "triathlon" | "ultraløp"}
+                  discipline={r.discipline}
                   displayDate={entry?.date}
                   countdown={formatCountdown(date)}
                   planned
@@ -243,7 +248,7 @@ export function HomePage() {
                 officialDate={r.officialDate}
                 distance={r.distance}
                 region={r.region}
-                discipline={r.discipline as "landevei" | "terreng" | "langrenn" | "triathlon" | "ultraløp"}
+                discipline={r.discipline}
                 countdown={formatCountdown(r.officialDate)}
                 planned={isPlanned(r.id)}
                 onTogglePlanned={(e) => handleToggle(r.id, r.officialDate, e)}
@@ -276,7 +281,7 @@ export function HomePage() {
                         officialDate={r.officialDate}
                         distance={r.distance}
                         region={r.region}
-                        discipline={r.discipline as "landevei" | "terreng" | "langrenn" | "triathlon" | "ultraløp"}
+                        discipline={r.discipline}
                         planned={isPlanned(r.id)}
                         onTogglePlanned={(e) => handleToggle(r.id, r.officialDate, e)}
                       />

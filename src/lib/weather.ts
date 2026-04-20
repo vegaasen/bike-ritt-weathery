@@ -5,7 +5,7 @@ type WeatherCacheData = {
 
 let _cachePromise: Promise<WeatherCacheData> | null = null;
 
-function getWeatherCache(): Promise<WeatherCacheData> {
+export function getWeatherCache(): Promise<WeatherCacheData> {
   if (!_cachePromise) {
     _cachePromise = import("../data/weather-cache.json").then(
       (m) => m.default as unknown as WeatherCacheData
@@ -245,7 +245,7 @@ export async function fetchClimateAverage(
     const vals = valid
       .map(accessor)
       .filter((v): v is number => v !== null && v !== undefined);
-    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
   };
 
   // Most common weather code across sampled years
@@ -264,23 +264,26 @@ export async function fetchClimateAverage(
         )
       : 0;
 
-  const tempMax = Math.round(avg((r) => r.daily.temperature_2m_max[0]) * 10) / 10;
+  const tempMax = Math.round((avg((r) => r.daily.temperature_2m_max[0]) ?? 0) * 10) / 10;
   const tempTrend =
     prevCached != null
       ? Math.round((tempMax - prevCached.tempMax) * 10) / 10
       : undefined;
 
+  const roundAvg = (v: number | null): number | undefined =>
+    v !== null ? Math.round(v * 10) / 10 : undefined;
+
   return {
     source: "climate-average",
     tempMax,
-    tempMin: Math.round(avg((r) => r.daily.temperature_2m_min[0]) * 10) / 10,
-    feelsLikeMax: Math.round(avg((r) => r.daily.apparent_temperature_max?.[0]) * 10) / 10,
-    feelsLikeMin: Math.round(avg((r) => r.daily.apparent_temperature_min?.[0]) * 10) / 10,
-    precipitation: Math.round(avg((r) => r.daily.precipitation_sum[0]) * 10) / 10,
-    windSpeed: Math.round(avg((r) => r.daily.wind_speed_10m_max[0]) * 10) / 10,
-    windDirection: Math.round(avg((r) => r.daily.wind_direction_10m_dominant?.[0])),
+    tempMin: Math.round((avg((r) => r.daily.temperature_2m_min[0]) ?? 0) * 10) / 10,
+    feelsLikeMax: roundAvg(avg((r) => r.daily.apparent_temperature_max?.[0])),
+    feelsLikeMin: roundAvg(avg((r) => r.daily.apparent_temperature_min?.[0])),
+    precipitation: Math.round((avg((r) => r.daily.precipitation_sum[0]) ?? 0) * 10) / 10,
+    windSpeed: Math.round((avg((r) => r.daily.wind_speed_10m_max[0]) ?? 0) * 10) / 10,
+    windDirection: Math.round(avg((r) => r.daily.wind_direction_10m_dominant?.[0]) ?? 0),
     weatherCode,
-    uvIndex: Math.round(avg((r) => r.daily.uv_index_max?.[0]) * 10) / 10 || undefined,
+    uvIndex: roundAvg(avg((r) => r.daily.uv_index_max?.[0])) || undefined,
     tempTrend,
   };
 }
@@ -401,19 +404,14 @@ export async function fetchClimateAverageHourly(
 
   if (valid.length === 0) throw new Error("No climate archive data available");
 
-  const avgHourly = (accessor: (r: OpenMeteoHourlyResponse) => number | null | undefined) => {
+  const avgHourly = (accessor: (r: OpenMeteoHourlyResponse) => number | null | undefined): number | null => {
     const vals = valid
       .map(accessor)
       .filter((v): v is number => v !== null && v !== undefined);
-    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
   };
 
-  const avgDaily = (accessor: (r: OpenMeteoHourlyResponse) => number | null | undefined) => {
-    const vals = valid
-      .map(accessor)
-      .filter((v): v is number => v !== null && v !== undefined);
-    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-  };
+  // avgHourly is used for both hourly and daily fields — the logic is identical.
 
   const codes = valid
     .map((r) => r.hourly.weather_code?.[hour])
@@ -430,13 +428,17 @@ export async function fetchClimateAverageHourly(
         )
       : 0;
 
-  const hourlyTemp = Math.round(avgHourly((r) => r.hourly.temperature_2m[hour]) * 10) / 10;
-  const hourlyFeelsLike = Math.round(avgHourly((r) => r.hourly.apparent_temperature[hour]) * 10) / 10;
-  const hourlyPrecipitation = Math.round(avgHourly((r) => r.hourly.precipitation[hour]) * 10) / 10;
-  const hourlyWindSpeed = Math.round(avgHourly((r) => r.hourly.wind_speed_10m[hour]) * 10) / 10;
-  const hourlyWindDirection = Math.round(avgHourly((r) => r.hourly.wind_direction_10m[hour]));
-  const tempMax = Math.round(avgDaily((r) => r.daily.temperature_2m_max[0]) * 10) / 10;
-  const uvRaw = Math.round(avgDaily((r) => r.daily.uv_index_max?.[0]) * 10) / 10;
+  const roundAvgH = (v: number | null): number => Math.round((v ?? 0) * 10) / 10;
+  const roundAvgHOpt = (v: number | null): number | undefined =>
+    v !== null ? Math.round(v * 10) / 10 : undefined;
+
+  const hourlyTemp = roundAvgH(avgHourly((r) => r.hourly.temperature_2m[hour]));
+  const hourlyFeelsLike = roundAvgH(avgHourly((r) => r.hourly.apparent_temperature[hour]));
+  const hourlyPrecipitation = roundAvgH(avgHourly((r) => r.hourly.precipitation[hour]));
+  const hourlyWindSpeed = roundAvgH(avgHourly((r) => r.hourly.wind_speed_10m[hour]));
+  const hourlyWindDirection = Math.round(avgHourly((r) => r.hourly.wind_direction_10m[hour]) ?? 0);
+  const tempMax = roundAvgH(avgHourly((r) => r.daily.temperature_2m_max[0]));
+  const uvRaw = roundAvgHOpt(avgHourly((r) => r.daily.uv_index_max?.[0]));
 
   const tempTrend =
     prevCached != null
@@ -446,14 +448,14 @@ export async function fetchClimateAverageHourly(
   return {
     source: "climate-average",
     tempMax,
-    tempMin: Math.round(avgDaily((r) => r.daily.temperature_2m_min[0]) * 10) / 10,
-    feelsLikeMax: Math.round(avgDaily((r) => r.daily.apparent_temperature_max?.[0]) * 10) / 10,
-    feelsLikeMin: Math.round(avgDaily((r) => r.daily.apparent_temperature_min?.[0]) * 10) / 10,
+    tempMin: roundAvgH(avgHourly((r) => r.daily.temperature_2m_min[0])),
+    feelsLikeMax: roundAvgHOpt(avgHourly((r) => r.daily.apparent_temperature_max?.[0])),
+    feelsLikeMin: roundAvgHOpt(avgHourly((r) => r.daily.apparent_temperature_min?.[0])),
     precipitation: hourlyPrecipitation,
     windSpeed: hourlyWindSpeed,
     windDirection: hourlyWindDirection,
     weatherCode,
-    uvIndex: uvRaw > 0 ? uvRaw : undefined,
+    uvIndex: uvRaw != null && uvRaw > 0 ? uvRaw : undefined,
     tempTrend,
     hourlyTemp,
     hourlyFeelsLike,

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { Waypoint } from "../lib/weather";
 
 type Props = {
@@ -11,51 +12,58 @@ const VH = 100;
 const PAD = { top: 10, right: 8, bottom: 28, left: 44 };
 const PLOT_W = VW - PAD.left - PAD.right;
 const PLOT_H = VH - PAD.top - PAD.bottom;
+const BASELINE = PAD.top + PLOT_H;
 
 // Waypoints are always at these distance fractions
 const FRACTIONS = [0, 0.25, 0.5, 0.75, 1.0];
 
 export function ElevationProfile({ waypoints, distanceKm }: Props) {
-  const withAlt = waypoints.filter((w) => w.altitude != null);
-  if (withAlt.length < 2) return null;
+  const derived = useMemo(() => {
+    const withAlt = waypoints.filter((w) => w.altitude != null);
+    if (withAlt.length < 2) return null;
 
-  const altitudes = withAlt.map((w) => w.altitude!);
-  const rawMin = Math.min(...altitudes);
-  const rawMax = Math.max(...altitudes);
+    const altitudes = withAlt.map((w) => w.altitude!);
+    const rawMin = Math.min(...altitudes);
+    const rawMax = Math.max(...altitudes);
 
-  // Ensure a minimum visual altitude range so flat profiles aren't degenerate
-  const MIN_RANGE = 100;
-  const rawSpread = rawMax - rawMin;
-  let visMin = rawMin;
-  let visMax = rawMax;
-  if (rawSpread < MIN_RANGE) {
-    const extra = (MIN_RANGE - rawSpread) / 2;
-    visMin = Math.max(0, rawMin - extra);
-    visMax = visMin + MIN_RANGE;
-  }
+    // Ensure a minimum visual altitude range so flat profiles aren't degenerate
+    const MIN_RANGE = 100;
+    const rawSpread = rawMax - rawMin;
+    let visMin = rawMin;
+    let visMax = rawMax;
+    if (rawSpread < MIN_RANGE) {
+      const extra = (MIN_RANGE - rawSpread) / 2;
+      visMin = Math.max(0, rawMin - extra);
+      visMax = visMin + MIN_RANGE;
+    }
 
-  const toX = (fraction: number) => PAD.left + fraction * PLOT_W;
-  const toY = (alt: number) =>
-    PAD.top + PLOT_H - ((alt - visMin) / (visMax - visMin)) * PLOT_H;
+    const toX = (fraction: number) => PAD.left + fraction * PLOT_W;
+    const toY = (alt: number) =>
+      PAD.top + PLOT_H - ((alt - visMin) / (visMax - visMin)) * PLOT_H;
 
-  const baseline = PAD.top + PLOT_H;
+    const points = withAlt.map((w, i) => ({
+      x: toX(FRACTIONS[i] ?? i / (withAlt.length - 1)),
+      y: toY(w.altitude!),
+      alt: w.altitude!,
+      label: w.label,
+      km: Math.round((FRACTIONS[i] ?? i / (withAlt.length - 1)) * distanceKm),
+    }));
 
-  const points = withAlt.map((w, i) => ({
-    x: toX(FRACTIONS[i] ?? i / (withAlt.length - 1)),
-    y: toY(w.altitude!),
-    alt: w.altitude!,
-    label: w.label,
-    km: Math.round((FRACTIONS[i] ?? i / (withAlt.length - 1)) * distanceKm),
-  }));
+    const lineCoords = points.map((p) => `${p.x},${p.y}`).join(" ");
+    const areaPath = [
+      `M ${points[0].x},${points[0].y}`,
+      ...points.slice(1).map((p) => `L ${p.x},${p.y}`),
+      `L ${points[points.length - 1].x},${BASELINE}`,
+      `L ${points[0].x},${BASELINE}`,
+      "Z",
+    ].join(" ");
 
-  const lineCoords = points.map((p) => `${p.x},${p.y}`).join(" ");
-  const areaPath = [
-    `M ${points[0].x},${points[0].y}`,
-    ...points.slice(1).map((p) => `L ${p.x},${p.y}`),
-    `L ${points[points.length - 1].x},${baseline}`,
-    `L ${points[0].x},${baseline}`,
-    "Z",
-  ].join(" ");
+    return { points, lineCoords, areaPath, rawMin, rawMax, visMin, visMax };
+  }, [waypoints, distanceKm]);
+
+  if (!derived) return null;
+
+  const { points, lineCoords, areaPath, rawMin, rawMax, visMin, visMax } = derived;
 
   return (
     <div className="elevation-profile">
@@ -86,7 +94,7 @@ export function ElevationProfile({ waypoints, distanceKm }: Props) {
             {/* km label below the chart */}
             <text
               x={p.x}
-              y={baseline + 14}
+              y={BASELINE + 14}
               className="elevation-profile__km-label"
               textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
             >
@@ -98,7 +106,7 @@ export function ElevationProfile({ waypoints, distanceKm }: Props) {
         {/* Min altitude label (bottom-left) */}
         <text
           x={PAD.left - 4}
-          y={baseline}
+          y={BASELINE}
           className="elevation-profile__alt-label"
           textAnchor="end"
           dominantBaseline="auto"

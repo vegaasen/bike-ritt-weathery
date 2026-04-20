@@ -1,16 +1,45 @@
 import type { Waypoint } from "./weather";
+import arrangements from "../data/arrangements.json";
+import triathlonData from "../data/triathlon-events.json";
+
+/** All arrangements merged: manually curated + auto-synced triathlon events. */
+export const allArrangements: RittEntry[] = [
+  ...(arrangements as RittEntry[]),
+  ...(triathlonData.events as RittEntry[]),
+];
+
+export type Discipline = "landevei" | "terreng" | "langrenn" | "triathlon" | "ultraløp";
 
 export interface RittEntry {
   id: string;
   name: string;
+  discipline: Discipline;
   distance: number;
   region: string;
   officialDate: string;
   /** Known mass-start time in "HH:MM" format, e.g. "08:00". Optional — not all ritt have a confirmed time. */
   officialStartTime?: string;
+  /** "pending" = date not yet officially confirmed for this season. */
+  dateStatus?: "pending";
   url?: string;
   waypoints: Waypoint[];
   elevationGain?: number;
+}
+
+/**
+ * Returns the next upcoming arrangement from the given list, or the first
+ * if all are in the past.
+ */
+export function getNextRitt(races: RittEntry[]): RittEntry | undefined {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return [...races]
+    .filter((r) => new Date(r.officialDate + "T00:00:00") >= today)
+    .sort(
+      (a, b) =>
+        new Date(a.officialDate + "T00:00:00").getTime() -
+        new Date(b.officialDate + "T00:00:00").getTime()
+    )[0];
 }
 
 /**

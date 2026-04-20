@@ -68,6 +68,7 @@ export function windRelativeLabel(
  * Used as a fallback when route bearing is unknown.
  */
 export function degreesToCompass(deg: number): string {
+  if (!Number.isFinite(deg)) return "?";
   const dirs = ["N", "NØ", "Ø", "SØ", "S", "SV", "V", "NV"];
   return dirs[Math.round(deg / 45) % 8];
 }

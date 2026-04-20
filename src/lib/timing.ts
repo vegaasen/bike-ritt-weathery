@@ -3,6 +3,10 @@
  * (e.g. [0, 0.25, 0.5, 0.75, 1.0]), returns an ISO datetime string for each
  * waypoint, rounded to the nearest hour (as Open-Meteo hourly data is per full hour).
  *
+ * Supports midnight-crossing races (e.g. start 23:00, finish 02:00 next day).
+ * When finish < start in wall-clock minutes the finish is assumed to be the
+ * following calendar day.
+ *
  * @param date     "YYYY-MM-DD"
  * @param start    "HH:MM"  e.g. "09:00"
  * @param finish   "HH:MM"  e.g. "12:00"
@@ -19,19 +23,35 @@ export function calcWaypointTimes(
   const [finishH, finishM] = finish.split(":").map(Number);
 
   const startMinutes = startH * 60 + startM;
-  const finishMinutes = finishH * 60 + finishM;
+  let finishMinutes = finishH * 60 + finishM;
+  // Midnight-crossing: if finish is earlier than start in wall-clock time,
+  // treat the finish as being on the next calendar day.
+  if (finishMinutes <= startMinutes) {
+    finishMinutes += 24 * 60;
+  }
   const totalMinutes = finishMinutes - startMinutes;
+
+  // Pre-compute the next calendar day for potential midnight-crossing waypoints.
+  const startDate = new Date(date + "T00:00:00");
+  const nextDate = new Date(startDate);
+  nextDate.setDate(nextDate.getDate() + 1);
+  const nextDateStr = nextDate.toISOString().split("T")[0];
 
   return fractions.map((fraction) => {
     const offsetMinutes = Math.round(fraction * totalMinutes);
     const absoluteMinutes = startMinutes + offsetMinutes;
 
-    // Round to nearest hour
-    const hour = Math.round(absoluteMinutes / 60);
-    // Clamp to valid hour range (handles edge cases like 23:45 rounding to 24)
-    const clampedHour = Math.min(23, Math.max(0, hour));
+    // Round to nearest hour (in absolute minutes from midnight of start day)
+    const absoluteHour = Math.round(absoluteMinutes / 60);
 
-    const paddedHour = String(clampedHour).padStart(2, "0");
+    if (absoluteHour >= 24) {
+      // Waypoint falls on the next calendar day
+      const hour = absoluteHour - 24;
+      const paddedHour = String(Math.min(23, hour)).padStart(2, "0");
+      return `${nextDateStr}T${paddedHour}:00`;
+    }
+
+    const paddedHour = String(Math.max(0, absoluteHour)).padStart(2, "0");
     return `${date}T${paddedHour}:00`;
   });
 }
@@ -65,10 +85,12 @@ export function calcFinishTimeFromSpeed(
   speedKmh: number
 ): string {
   const [startH, startM] = startTime.split(":").map(Number);
-  const startMinutes = startH * 60 + (startM ?? 0);
+  const startMinutes = startH * 60 + startM;
   const durationMinutes = Math.round((distanceKm / speedKmh) * 60);
-  const finishMinutes = Math.min(startMinutes + durationMinutes, 23 * 60 + 59);
+  const finishMinutes = startMinutes + durationMinutes;
 
+  // Allow times past midnight (e.g. "25:30" for 01:30 next day) — callers
+  // display this as-is; calcWaypointTimes handles the date rollover.
   const h = Math.floor(finishMinutes / 60);
   const m = finishMinutes % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;

@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type CopyState = "idle" | "copied" | "error";
 
 export function ShareButton() {
   const [state, setState] = useState<CopyState>("idle");
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   async function handleShare() {
     try {
@@ -12,7 +19,8 @@ export function ShareButton() {
     } catch {
       setState("error");
     }
-    setTimeout(() => setState("idle"), 2000);
+    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setState("idle"), 2000);
   }
 
   const label =

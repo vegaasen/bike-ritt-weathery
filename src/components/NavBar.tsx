@@ -1,35 +1,25 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import ritt from "../data/arrangements.json";
+import { allArrangements as ritt, getNextRitt, type RittEntry } from "../lib/ritt";
 
-type Race = (typeof ritt)[number];
+type Race = RittEntry;
 
 function groupByYear(races: Race[]): Map<number, Race[]> {
   const sorted = [...races].sort(
-    (a, b) => new Date(a.officialDate).getTime() - new Date(b.officialDate).getTime()
+    (a, b) => new Date(a.officialDate + "T00:00:00").getTime() - new Date(b.officialDate + "T00:00:00").getTime()
   );
   const grouped = new Map<number, Race[]>();
   for (const race of sorted) {
-    const year = new Date(race.officialDate).getFullYear();
+    const year = new Date(race.officialDate + "T00:00:00").getFullYear();
     if (!grouped.has(year)) grouped.set(year, []);
     grouped.get(year)!.push(race);
   }
   return grouped;
 }
 
-/** Returns the id of the next upcoming (or soonest past) ritt. */
-function getNextRittId(): string {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const upcoming = [...ritt]
-    .filter((r) => new Date(r.officialDate) >= today)
-    .sort((a, b) => new Date(a.officialDate).getTime() - new Date(b.officialDate).getTime());
-  return upcoming[0]?.id ?? ritt[0]?.id ?? "";
-}
-
-// Computed once at module load — both are derived from static ritt.json data.
+// Computed once at module load — both are derived from static ritt data.
 const grouped = groupByYear(ritt);
 const years = [...grouped.keys()].sort((a, b) => b - a);
-const nextId = getNextRittId();
+const nextId = getNextRitt(ritt)?.id ?? ritt[0]?.id ?? "";
 
 export function NavBar() {
   const navigate = useNavigate();

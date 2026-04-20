@@ -8,21 +8,20 @@ import { HistoricalWeatherTable } from "../components/HistoricalWeatherTable";
 import { GearSuggestion } from "../components/GearSuggestion";
 import { ElevationProfile } from "../components/ElevationProfile";
 import { ErrorBoundary } from "../components/ErrorBoundary";
-import { computeElevationGain, type RittEntry } from "../lib/ritt";
+import { computeElevationGain, allArrangements } from "../lib/ritt";
 import { physicalScore, weatherAdjustment, scoreToLabel } from "../lib/difficulty";
 import { useMyRitt } from "../hooks/useMyRitt";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useWeather } from "../hooks/useWeather";
 import { calcWaypointTimes, WAYPOINT_FRACTIONS } from "../lib/timing";
 import { ShareButton } from "../components/ShareButton";
-import ritt from "../data/arrangements.json";
 
 export function RittPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isPlanned, getPlanned, add, remove } = useMyRitt();
 
-  const rittData = ritt.find((r) => r.id === id) as RittEntry | undefined;
+  const rittData = allArrangements.find((r) => r.id === id);
 
   usePageTitle(rittData ? `${rittData.name} – Startstreken` : "Fant ikke arrangement – Startstreken");
 
@@ -100,7 +99,7 @@ export function RittPage() {
     }
   }
 
-  const formattedOfficialDate = new Date(rittData.officialDate).toLocaleDateString(
+  const formattedOfficialDate = new Date(rittData.officialDate + "T00:00:00").toLocaleDateString(
     "nb-NO",
     { day: "numeric", month: "long", year: "numeric" }
   );
@@ -166,7 +165,7 @@ export function RittPage() {
       </header>
 
       <section className="ritt-page__map-section">
-        <RittMap waypoints={rittData.waypoints} name={rittData.name} />
+        <RittMap waypoints={rittData.waypoints} name={rittData.name} discipline={rittData.discipline} />
       </section>
 
       <section className="ritt-page__elevation-section">

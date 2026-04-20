@@ -1,5 +1,5 @@
 import { useQueries } from "@tanstack/react-query";
-import { fetchWeather, fetchWeatherForDatetime, isForecastRange } from "../lib/weather";
+import { fetchWeather, fetchWeatherForDatetime } from "../lib/weather";
 import type { Waypoint, WeatherData } from "../lib/weather";
 
 export type WaypointWeather = {
@@ -35,8 +35,6 @@ export function useWeather(
             ? fetchWeatherForDatetime(wp, datetime)
             : fetchWeather(wp, date!),
         enabled: datetime ? true : !!date,
-        staleTime: 1000 * 60 * 10, // 10 minutes
-        retry: 2,
       };
     }),
   });
@@ -49,4 +47,3 @@ export function useWeather(
   }));
 }
 
-export { isForecastRange };

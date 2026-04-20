@@ -40,6 +40,8 @@ type WeatherEntry = {
   source: "climate-average";
   tempMax: number;
   tempMin: number;
+  feelsLikeMax?: number;
+  feelsLikeMin?: number;
   precipitation: number;
   windSpeed: number;
   weatherCode: number;
@@ -60,7 +62,7 @@ type WeatherCache = {
 
 const ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive";
 const DAILY_PARAMS =
-  "temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weather_code,uv_index_max";
+  "temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,wind_speed_10m_max,weather_code,uv_index_max";
 const START_YEAR = 2015;
 const END_YEAR = 2024;
 const CONCURRENCY = 2; // max parallel requests (Open-Meteo free tier: gentle rate limit)
@@ -111,6 +113,8 @@ function historicalKey(wp: Waypoint, mm: string, dd: string, year: number): stri
 type RawDailyResult = {
   tempMax: number | null;
   tempMin: number | null;
+  feelsLikeMax: number | null;
+  feelsLikeMin: number | null;
   precipitation: number | null;
   windSpeed: number | null;
   weatherCode: number | null;
@@ -151,6 +155,8 @@ async function fetchArchiveDay(
       return {
         tempMax: d.temperature_2m_max?.[0] ?? null,
         tempMin: d.temperature_2m_min?.[0] ?? null,
+        feelsLikeMax: d.apparent_temperature_max?.[0] ?? null,
+        feelsLikeMin: d.apparent_temperature_min?.[0] ?? null,
         precipitation: d.precipitation_sum?.[0] ?? null,
         windSpeed: d.wind_speed_10m_max?.[0] ?? null,
         weatherCode: d.weather_code?.[0] ?? null,
@@ -178,6 +184,12 @@ function average(vals: (number | null)[]): number {
   return Math.round((clean.reduce((a, b) => a + b, 0) / clean.length) * 10) / 10;
 }
 
+/** Like average, but returns null when no valid values are present. */
+function averageOpt(vals: (number | null)[]): number | null {
+  const clean = vals.filter((v): v is number => v !== null);
+  if (clean.length === 0) return null;
+  return Math.round((clean.reduce((a, b) => a + b, 0) / clean.length) * 10) / 10;
+}
 function statisticalMode(vals: (number | null)[]): number {
   const clean = vals.filter((v): v is number => v !== null);
   if (clean.length === 0) return 0;
@@ -192,9 +204,12 @@ function statisticalMode(vals: (number | null)[]): number {
 
 async function main() {
   const rittPath = resolve(__dirname, "../src/data/arrangements.json");
+  const triathlonPath = resolve(__dirname, "../src/data/triathlon-events.json");
   const outputPath = resolve(__dirname, "../src/data/weather-cache.json");
 
-  const ritts: Ritt[] = JSON.parse(readFileSync(rittPath, "utf-8")) as Ritt[];
+  const arrangements: Ritt[] = JSON.parse(readFileSync(rittPath, "utf-8")) as Ritt[];
+  const triathlonData = JSON.parse(readFileSync(triathlonPath, "utf-8")) as { events: Ritt[] };
+  const ritts: Ritt[] = [...arrangements, ...triathlonData.events];
 
   // Collect all unique (wp, MM, DD) combinations to avoid duplicate fetches
   type FetchJob = { wp: Waypoint; mm: string; dd: string; year: number };
@@ -242,6 +257,8 @@ async function main() {
         source: "climate-average",
         tempMax: result.tempMax ?? 0,
         tempMin: result.tempMin ?? 0,
+        ...(result.feelsLikeMax !== null ? { feelsLikeMax: result.feelsLikeMax } : {}),
+        ...(result.feelsLikeMin !== null ? { feelsLikeMin: result.feelsLikeMin } : {}),
         precipitation: result.precipitation ?? 0,
         windSpeed: result.windSpeed ?? 0,
         weatherCode: result.weatherCode ?? 0,
@@ -276,6 +293,8 @@ async function main() {
           yearlyData.push({
             tempMax: entry.tempMax,
             tempMin: entry.tempMin,
+            feelsLikeMax: entry.feelsLikeMax ?? null,
+            feelsLikeMin: entry.feelsLikeMin ?? null,
             precipitation: entry.precipitation,
             windSpeed: entry.windSpeed,
             weatherCode: entry.weatherCode,
@@ -287,11 +306,15 @@ async function main() {
       if (yearlyData.length === 0) continue;
 
       const uvAvg = average(yearlyData.map((d) => d.uvIndex));
+      const feelsLikeMaxAvg = averageOpt(yearlyData.map((d) => d.feelsLikeMax));
+      const feelsLikeMinAvg = averageOpt(yearlyData.map((d) => d.feelsLikeMin));
 
       cache.climateAverages[cKey] = {
         source: "climate-average",
         tempMax: average(yearlyData.map((d) => d.tempMax)),
         tempMin: average(yearlyData.map((d) => d.tempMin)),
+        ...(feelsLikeMaxAvg !== null ? { feelsLikeMax: feelsLikeMaxAvg } : {}),
+        ...(feelsLikeMinAvg !== null ? { feelsLikeMin: feelsLikeMinAvg } : {}),
         precipitation: average(yearlyData.map((d) => d.precipitation)),
         windSpeed: average(yearlyData.map((d) => d.windSpeed)),
         weatherCode: statisticalMode(yearlyData.map((d) => d.weatherCode)),

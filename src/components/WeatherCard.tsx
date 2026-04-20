@@ -72,7 +72,128 @@ const ROAD_RISK_LABELS: Record<"ice" | "slush" | "wet", { icon: string; label: s
   wet:   { icon: "💧", label: "Fuktig vei" },
 };
 
-export const WeatherCard = memo(function WeatherCard({ waypoint, data, isLoading, isError, arrivalTime, routeBearing }: Props) {
+/** Renders the loaded weather data content inside a WeatherCard. */
+function WeatherCardContent({
+  data,
+  routeBearing,
+}: {
+  data: WeatherData;
+  routeBearing?: number;
+}) {
+  const { label: wLabel, emoji } = describeWeatherCode(data.weatherCode);
+
+  // Effective wind direction and speed for display
+  const windDir = data.hourlyWindDirection ?? data.windDirection;
+  const windSpeed = data.hourlyWindSpeed ?? data.windSpeed;
+
+  // Wind direction label
+  let windDirLabel: string | null = null;
+  if (windDir !== undefined) {
+    windDirLabel =
+      routeBearing !== undefined
+        ? windRelativeLabel(windDir, routeBearing)
+        : degreesToCompass(windDir);
+  }
+
+  // Feels-like temperature for display
+  const feelsLike =
+    data.hourlyFeelsLike ??
+    (data.feelsLikeMax != null ? data.feelsLikeMax : undefined);
+
+  const showHourly = data.hourlyTemp != null;
+
+  // Temperature trend — only show when difference is ≥ 0.5°
+  const trend =
+    data.tempTrend != null && Math.abs(data.tempTrend) >= 0.5
+      ? data.tempTrend
+      : null;
+
+  // UV index — only show when UV is notable (≥ 3)
+  const showUv = data.uvIndex != null && data.uvIndex >= 3;
+
+  // Road risk
+  const risk = roadRisk(data);
+
+  return (
+    <>
+      {data.source === "climate-average" && (
+        <span className="weather-card__badge">Klimasnitt</span>
+      )}
+      <div className="weather-card__icon">{emoji}</div>
+      <div className="weather-card__description">{wLabel}</div>
+      <div className="weather-card__temps">
+        {showHourly ? (
+          <span className="weather-card__temp-hourly">{data.hourlyTemp}°</span>
+        ) : (
+          <>
+            <span className="weather-card__temp-max">{data.tempMax}°</span>
+            {" / "}
+            <span className="weather-card__temp-min">{data.tempMin}°</span>
+          </>
+        )}
+        {trend !== null && (
+          <span
+            className={`weather-card__trend weather-card__trend--${trend > 0 ? "up" : "down"}`}
+            title={`${trend > 0 ? "Varmere" : "Kaldere"} enn i går (${trend > 0 ? "+" : ""}${trend}°)`}
+          >
+            {trend > 0 ? "↑" : "↓"}{trend > 0 ? "+" : ""}{trend}°
+          </span>
+        )}
+      </div>
+      {feelsLike != null && (
+        <div className="weather-card__feels-like">
+          Føles som {feelsLike}°
+        </div>
+      )}
+      <div className="weather-card__detail">
+        <span title="Nedbør">
+          🌧 {data.hourlyPrecipitation ?? data.precipitation} mm
+          {data.precipitationProbability != null && (
+            <span className="weather-card__precip-prob"> · {data.precipitationProbability}%</span>
+          )}
+        </span>
+        {risk && (
+          <span className={`weather-card__road-risk weather-card__road-risk--${risk}`}>
+            {ROAD_RISK_LABELS[risk].icon} {ROAD_RISK_LABELS[risk].label}
+          </span>
+        )}
+      </div>
+      <div className="weather-card__detail">
+        <span title="Vind">
+          💨 {windSpeed} km/t
+          {windDir !== undefined && (
+            <span
+              className="weather-card__wind-arrow"
+              style={{ transform: `rotate(${windDir}deg)` }}
+              aria-hidden="true"
+            >
+              ↑
+            </span>
+          )}
+          {windDirLabel && (
+            <span className="weather-card__wind-dir"> · {windDirLabel}</span>
+          )}
+        </span>
+      </div>
+      {showUv && (
+        <div className="weather-card__detail">
+          <span className={`weather-card__uv weather-card__uv--${uvLevel(data.uvIndex!).mod}`}>
+            ☀️ UV {data.uvIndex} · {uvLevel(data.uvIndex!).label}
+          </span>
+        </div>
+      )}
+    </>
+  );
+}
+
+export const WeatherCard = memo(function WeatherCard({
+  waypoint,
+  data,
+  isLoading,
+  isError,
+  arrivalTime,
+  routeBearing,
+}: Props) {
   const { label } = waypoint;
 
   const extraClasses =
@@ -104,114 +225,9 @@ export const WeatherCard = memo(function WeatherCard({ waypoint, data, isLoading
         <div className="weather-card__error">Kunne ikke hente vær</div>
       )}
 
-      {data && (() => {
-        const { label: wLabel, emoji } = describeWeatherCode(data.weatherCode);
-
-        // Effective wind direction and speed for display
-        const windDir = data.hourlyWindDirection ?? data.windDirection;
-        const windSpeed = data.hourlyWindSpeed ?? data.windSpeed;
-
-        // Wind direction label
-        let windDirLabel: string | null = null;
-        if (windDir !== undefined) {
-          if (routeBearing !== undefined) {
-            windDirLabel = windRelativeLabel(windDir, routeBearing);
-          } else {
-            windDirLabel = degreesToCompass(windDir);
-          }
-        }
-
-        // Feels-like temperature for display
-        const feelsLike =
-          data.hourlyFeelsLike ??
-          (data.feelsLikeMax != null ? data.feelsLikeMax : undefined);
-
-        // Actual temp for display
-        const showHourly = data.hourlyTemp != null;
-
-        // Temperature trend — only show when difference is ≥ 0.5°
-        const trend =
-          data.tempTrend != null && Math.abs(data.tempTrend) >= 0.5
-            ? data.tempTrend
-            : null;
-
-        // UV index — only show when UV is notable (≥ 3)
-        const showUv = data.uvIndex != null && data.uvIndex >= 3;
-
-        // Road risk
-        const risk = roadRisk(data);
-
-        return (
-          <>
-            {data.source === "climate-average" && (
-              <span className="weather-card__badge">Klimasnitt</span>
-            )}
-            <div className="weather-card__icon">{emoji}</div>
-            <div className="weather-card__description">{wLabel}</div>
-            <div className="weather-card__temps">
-              {showHourly ? (
-                <span className="weather-card__temp-hourly">{data.hourlyTemp}°</span>
-              ) : (
-                <>
-                  <span className="weather-card__temp-max">{data.tempMax}°</span>
-                  {" / "}
-                  <span className="weather-card__temp-min">{data.tempMin}°</span>
-                </>
-              )}
-              {trend !== null && (
-                <span
-                  className={`weather-card__trend weather-card__trend--${trend > 0 ? "up" : "down"}`}
-                  title={`${trend > 0 ? "Varmere" : "Kaldere"} enn i går (${trend > 0 ? "+" : ""}${trend}°)`}
-                >
-                  {trend > 0 ? "↑" : "↓"}{trend > 0 ? "+" : ""}{trend}°
-                </span>
-              )}
-            </div>
-            {feelsLike != null && (
-              <div className="weather-card__feels-like">
-                Føles som {feelsLike}°
-              </div>
-            )}
-            <div className="weather-card__detail">
-              <span title="Nedbør">
-                🌧 {data.precipitation} mm
-                {data.precipitationProbability != null && (
-                  <span className="weather-card__precip-prob"> · {data.precipitationProbability}%</span>
-                )}
-              </span>
-              {risk && (
-                <span className={`weather-card__road-risk weather-card__road-risk--${risk}`}>
-                  {ROAD_RISK_LABELS[risk].icon} {ROAD_RISK_LABELS[risk].label}
-                </span>
-              )}
-            </div>
-            <div className="weather-card__detail">
-              <span title="Vind">
-                💨 {windSpeed} km/t
-                {windDir !== undefined && (
-                  <span
-                    className="weather-card__wind-arrow"
-                    style={{ transform: `rotate(${windDir}deg)` }}
-                    aria-hidden="true"
-                  >
-                    ↑
-                  </span>
-                )}
-                {windDirLabel && (
-                  <span className="weather-card__wind-dir"> · {windDirLabel}</span>
-                )}
-              </span>
-            </div>
-            {showUv && (
-              <div className="weather-card__detail">
-                <span className={`weather-card__uv weather-card__uv--${uvLevel(data.uvIndex!).mod}`}>
-                  ☀️ UV {data.uvIndex} · {uvLevel(data.uvIndex!).label}
-                </span>
-              </div>
-            )}
-          </>
-        );
-      })()}
+      {data && (
+        <WeatherCardContent data={data} routeBearing={routeBearing} />
+      )}
 
       {!isLoading && !isError && !data && (
         <div className="weather-card__placeholder">Velg dato for å se vær</div>
