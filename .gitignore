@@ -13,6 +13,9 @@ dist-ssr
 dev-dist
 *.local
 
+# Local notes (not for version control)
+AWS_DEPLOY_NOTES.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
