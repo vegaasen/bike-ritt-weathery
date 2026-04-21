@@ -5,15 +5,15 @@ variable "aws_region" {
 }
 
 variable "domain_name" {
-  description = "Root domain name (e.g. startstreken.no)"
+  description = "Root domain name (e.g. løypevær.no)"
   type        = string
-  default     = "startstreken.no"
+  default     = "løypevær.no"
 }
 
 variable "s3_bucket_name" {
   description = "Name of the S3 bucket used for site hosting"
   type        = string
-  default     = "startstreken-no-site"
+  default     = "løypevær-no-site"
 }
 
 variable "cloudfront_price_class" {

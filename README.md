@@ -1,4 +1,4 @@
-# Startstreken 🚴
+# Løypevær 🚴
 
 ![CI](https://github.com/vegaasen/startstreken/actions/workflows/ci.yml/badge.svg)
 ![Deploy](https://github.com/vegaasen/startstreken/actions/workflows/pages.yml/badge.svg)

@@ -143,8 +143,8 @@ export function HomePage() {
 
         <div className="home-page__feature">
           <div className="home-page__feature-text">
-            <div className="home-page__feature-eyebrow">Rutevær</div>
-            <h2>Vær for hele ruten — ikke bare starten</h2>
+            <div className="home-page__feature-eyebrow">Etappevær</div>
+            <h2>Vær for hele løypa — ikke bare starten</h2>
             <p>
               Vi henter værvarsler for alle nøkkelpunktene langs ruten — start,
               topp, nedstigning og mål. Du ser temperatur, vind og nedbør akkurat der det
