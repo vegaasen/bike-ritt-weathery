@@ -70,7 +70,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform Import
-        if: github.event_name == 'workflow_dispatch' && inputs.run_import == 'true'
+        if: github.event_name == 'workflow_dispatch' && inputs.run_import
         run: terraform import aws_s3_bucket.site loypevaer-no-site
         env:
           TF_VAR_aws_region: ${{ env.AWS_REGION }}
