@@ -1,5 +1,6 @@
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { DatePicker } from "../components/DatePicker";
 import { TimePicker } from "../components/TimePicker";
 import { WeatherStrip } from "../components/WeatherStrip";
@@ -24,6 +25,15 @@ export function EventPage() {
   const rittData = allArrangements.find((r) => r.id === id);
 
   usePageTitle(rittData ? `${rittData.name} – Løypevær` : "Fant ikke arrangement – Løypevær");
+
+  const BASE_URL = "https://vegaasen.github.io/loypevaer";
+  const pageUrl = rittData ? `${BASE_URL}/arrangement/${rittData.id}` : BASE_URL;
+  const pageTitle = rittData
+    ? `${rittData.name} – Løypevær`
+    : "Fant ikke arrangement – Løypevær";
+  const pageDescription = rittData
+    ? `Sjekk værvarselet for ${rittData.name} — ${rittData.distance} km i ${rittData.region}. Timebasert vær for hvert punkt langs ruten, tilpasset din starttid.`
+    : undefined;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -124,6 +134,19 @@ export function EventPage() {
 
   return (
     <div className="ritt-page">
+      <Helmet>
+        <title>{pageTitle}</title>
+        {pageDescription && <meta name="description" content={pageDescription} />}
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={pageTitle} />
+        {pageDescription && <meta property="og:description" content={pageDescription} />}
+        <meta property="og:locale" content="nb_NO" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        {pageDescription && <meta name="twitter:description" content={pageDescription} />}
+      </Helmet>
       <header className="ritt-page__header">
         <h1>{rittData.name}</h1>
         <div className="ritt-page__meta">

@@ -5,17 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "bun scripts/generate-sitemap.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "fetch-weather": "bun scripts/fetch-weather-cache.ts",
-    "fetch-triathlon": "bun scripts/fetch-triathlon-events.ts"
+    "fetch-triathlon": "bun scripts/fetch-triathlon-events.ts",
+    "generate-sitemap": "bun scripts/generate-sitemap.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.95.2",
     "leaflet": "^1.9.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.13.2"
   },
   "devDependencies": {

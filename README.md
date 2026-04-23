@@ -13,7 +13,7 @@
 
 Pick a Norwegian race, choose a date, and get weather conditions at ~5 key points along the route — from start to finish. Uses live forecasts when the date is close, and 10-year historical climate averages when planning further ahead.
 
-**Live app: [vegaasen.github.io/loypevaer](https://vegaasen.github.io/loypevaer/)**
+**Live app: [løypevær.no](https://www.xn--lypevr-tua3l.no/)**
 
 ---
 

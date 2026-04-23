@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { EventCard } from "../components/EventCard";
 import { useFilterContext } from "../context/useFilterContext";
 import { useMyEvents } from "../hooks/useMyEvents";
@@ -56,6 +57,11 @@ const DISCIPLINE_LABELS: Record<Discipline, string> = {
 
 export function HomePage() {
   usePageTitle("Løypevær");
+
+  const BASE_URL = "https://vegaasen.github.io/loypevaer";
+  const description =
+    `Værvarsler og historiske klimasnitt for ${ritt.length} norske utholdenhetsarrangement — sykkelritt, langrenn, triathlon og ultraløp. Timebasert vær for hvert punkt langs ruten.`;
+
   const { plannedIds, isPlanned, getPlanned, add, remove } = useMyEvents();
   const { discipline, setDiscipline } = useFilterContext();
   const [search, setSearch] = useState("");
@@ -117,6 +123,19 @@ export function HomePage() {
 
   return (
     <div className="home-page">
+      <Helmet>
+        <title>Løypevær – Vær langs ruten for norske utholdenhetsarrangement</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={BASE_URL} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={BASE_URL} />
+        <meta property="og:title" content="Løypevær – Vær langs ruten for norske utholdenhetsarrangement" />
+        <meta property="og:description" content={description} />
+        <meta property="og:locale" content="nb_NO" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Løypevær – Vær langs ruten for norske utholdenhetsarrangement" />
+        <meta name="twitter:description" content={description} />
+      </Helmet>
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="home-page__hero">

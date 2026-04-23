@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vegaasen.github.io/loypevaer/sitemap.xml
