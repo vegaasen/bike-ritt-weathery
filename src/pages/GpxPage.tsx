@@ -92,7 +92,7 @@ export function GpxPage() {
     setError(null);
     try {
       const points = await fetchGpxFromUrl(urlInput.trim());
-      const name = urlInput.split("/").pop()?.replace(/\.gpx$/i, "") ?? "GPX-rute";
+      const name = urlInput.split("/").pop()?.replace(/\.gpx$/i, "") ?? "GPX-løype";
       applyPoints(points, name, waypointCount);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ukjent feil ved nedlasting av GPX.");
@@ -122,14 +122,14 @@ export function GpxPage() {
   return (
     <div className="ritt-page">
       <Helmet>
-        <title>GPX-værvarsел – Løypevær</title>
+        <title>GPX-værvarsеl – Løypevær</title>
         <meta name="description" content="Last opp en GPX-fil og se værvarselet langs ruten din." />
       </Helmet>
 
       <Link to="/" className="ritt-page__back-link">← Alle arrangement</Link>
 
       <header className="ritt-page__header">
-        <h1>Værvarsел for GPX-rute</h1>
+        <h1>Værvarsеl for GPX</h1>
         <p className="ritt-page__subtitle">
           Last opp en GPX-fil eller oppgi en URL for å se værvarselet langs ruten.
         </p>
@@ -149,7 +149,7 @@ export function GpxPage() {
           >
             <span className="gpx-upload__icon" aria-hidden="true">📂</span>
             <p className="gpx-upload__primary">Dra og slipp en GPX-fil her</p>
-            <p className="gpx-upload__secondary">eller klikk for å velge fil</p>
+            <p className="gpx-upload__secondary">(klikk for å velge)</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -160,25 +160,25 @@ export function GpxPage() {
               tabIndex={-1}
             />
           </div>
-
+          <p>eller</p>
           <div className="gpx-upload__url-row">
             <input
               type="url"
               className="gpx-upload__url-input"
-              placeholder="Eller lim inn URL til GPX-fil…"
+              placeholder="Lim inn URL til GPX-fil…"
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") void handleUrlLoad(); }}
               aria-label="URL til GPX-fil"
             />
-            <button
+          </div>
+          <button
               className="gpx-upload__url-btn"
               onClick={() => void handleUrlLoad()}
               disabled={loading || !urlInput.trim()}
-            >
-              {loading ? "Laster…" : "Last inn"}
-            </button>
-          </div>
+          >
+            {loading ? "Laster…" : "Last inn"}
+          </button>
 
           {error && <p className="gpx-upload__error" role="alert">{error}</p>}
         </section>

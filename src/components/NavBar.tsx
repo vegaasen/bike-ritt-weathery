@@ -41,7 +41,7 @@ export function NavBar() {
           Løypevær
         </Link>
         <Link to="/gpx" className="site-nav__gpx-link">
-          GPX-rute
+          GPX-løype
         </Link>
         <div className="site-nav__selector">
           <select
