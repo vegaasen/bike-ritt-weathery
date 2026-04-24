@@ -1,19 +1,28 @@
-# Løypevær 🚴
+<div align="center">
 
-![CI](https://github.com/vegaasen/loypevaer/actions/workflows/ci.yml/badge.svg)
-![Deploy](https://github.com/vegaasen/loypevaer/actions/workflows/pages.yml/badge.svg)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
-![Bun](https://img.shields.io/badge/Bun-runtime-F9F1E1?logo=bun&logoColor=black)
-![TanStack Query](https://img.shields.io/badge/TanStack_Query-v5-FF4154?logo=reactquery&logoColor=white)
-![Open-Meteo](https://img.shields.io/badge/Open--Meteo-free_API-00B4D8)
+# Løypevær 🚴‍♂️⛷️🏊
 
 **Sjekk været langs ruten for norske sykkelritt, langrenn, triathlon og ultraløp.**
 
-Pick a Norwegian race, choose a date, and get weather conditions at ~5 key points along the route — from start to finish. Uses live forecasts when the date is close, and 10-year historical climate averages when planning further ahead.
+Pick a Norwegian race, choose a date, and get weather conditions at key waypoints along the route — from start to finish. Uses live forecasts when the date is close, and 10-year historical climate averages when planning further ahead.
 
-**Live app: [løypevær.no](https://www.xn--lypevr-tua3l.no/)**
+### [løypevær.no](https://www.xn--lypevr-tua3l.no/)
+
+---
+
+<p align="center">
+  <a href="https://github.com/vegaasen/loypevaer/actions/workflows/ci.yml"><img src="https://github.com/vegaasen/loypevaer/actions/workflows/ci.yml/badge.svg" alt="CI" height="28"></a>
+  <a href="https://github.com/vegaasen/loypevaer/actions/workflows/pages.yml"><img src="https://github.com/vegaasen/loypevaer/actions/workflows/pages.yml/badge.svg" alt="Deploy" height="28"></a>
+  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="https://vitejs.dev"><img src="https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
+  <a href="https://bun.sh"><img src="https://img.shields.io/badge/Bun-runtime-F9F1E1?style=for-the-badge&logo=bun&logoColor=black" alt="Bun"></a>
+  <a href="https://tanstack.com/query"><img src="https://img.shields.io/badge/TanStack_Query-v5-FF4154?style=for-the-badge&logo=reactquery&logoColor=white" alt="TanStack Query"></a>
+  <a href="https://open-meteo.com"><img src="https://img.shields.io/badge/Open--Meteo-free_API-00B4D8?style=for-the-badge" alt="Open-Meteo"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen?style=for-the-badge" alt="License"></a>
+</p>
+
+</div>
 
 ---
 
@@ -34,46 +43,65 @@ Pick a Norwegian race, choose a date, and get weather conditions at ~5 key point
 - Shareable URLs — date is stored in the query string (`/arrangement/birkebeinerrittet?date=2025-08-23`)
 - Dark mode via `prefers-color-scheme`
 
+---
+
 ## Events included
 
-| Arrangement | Distance | Region | Disiplin |
-|---|---|---|---|
-| Birkebeinerrittet | 88 km | Innlandet | Terreng |
-| GravelBirken | 92 km | Innlandet | Terreng |
-| HalvBirken Sykkel | 46 km | Innlandet | Terreng |
-| UltraBirken | 110 km | Innlandet | Terreng |
-| Styrkeprøven | 540 km | Trøndelag / Innlandet | Landevei |
-| Jotunheimen Rundt | 430 km | Innlandet / Vestland | Landevei |
-| Bergen-Voss | 78 km | Vestland | Landevei |
-| Haugastøl–Bergen | 182 km | Vestland | Landevei |
-| Rallarvegen | 82 km | Vestland / Viken | Terreng |
-| Nordsjørittet (Egersund–Flekkefjord) | 91 km | Rogaland | Landevei |
-| Nordsjørittet (Jæren, Egersund–Sandnes) | 88 km | Rogaland | Landevei |
-| Lysebotn Opp | 14 km | Rogaland | Landevei |
-| Lysebotn-Bryne Rittet | 147 km | Rogaland | Landevei |
-| Garborgriket Rundt | 70 km | Rogaland | Terreng |
-| Haugesund-Sauda | 107 km | Rogaland / Vestland | Landevei |
-| L'Étape Trondheim | 130 km | Trøndelag | Landevei |
-| Victoriarunden | 120 km | Trøndelag | Landevei |
-| Tour de Frøya | 44 km | Trøndelag | Landevei |
-| Øyungen Rundt | 45 km | Trøndelag | Terreng |
-| Nordmarka Rundt | 148 km | Oslo / Viken | Landevei |
-| OBOS Terrengsykkelrittet | 28 km | Oslo | Terreng |
-| Color Line Tour | 210 km | Agder | Landevei |
-| Tyrifjorden Rundt | 145 km | Viken | Landevei |
-| Eikerrittet | 90 km | Viken | Landevei |
-| Stenhoggerrittet | 46 km | Viken | Terreng |
-| Elgrittet | 54 km | Viken | Terreng |
-| Randsfjorden Rundt | 152 km | Viken | Landevei |
-| Grenserittet | 80 km | Østfold / Sverige | Terreng |
-| Skjebergrittet | 38 km | Østfold | Terreng |
-| Valdresrittet | 54 km | Innlandet | Terreng |
-| Mjøsrittet | 167 km | Innlandet | Landevei |
-| Sjusjørittet | 56 km | Innlandet | Terreng |
-| Trysil-Knut / Osensjøen Rundt Gravel | 60 km | Innlandet | Terreng |
-| Skjærgårdsrittet | 75 km | Vestland | Landevei |
-| Tour de Lyngen | 94 km | Troms | Landevei |
-| Midnattsolrittet | 46 km | Nordland | Landevei |
+### Sykkel — Terreng
+
+| Arrangement | Distance | Region |
+|---|---|---|
+| Birkebeinerrittet | 88 km | Innlandet |
+| GravelBirken | 92 km | Innlandet |
+| HalvBirken Sykkel | 46 km | Innlandet |
+| UltraBirken | 110 km | Innlandet |
+| Rallarvegen | 82 km | Vestland / Viken |
+| Garborgriket Rundt | 70 km | Rogaland |
+| Øyungen Rundt | 45 km | Trøndelag |
+| OBOS Terrengsykkelrittet | 28 km | Oslo |
+| Stenhoggerrittet | 46 km | Viken |
+| Elgrittet | 54 km | Viken |
+| Grenserittet | 80 km | Østfold / Sverige |
+| Skjebergrittet | 38 km | Østfold |
+| Valdresrittet | 54 km | Innlandet |
+| Sjusjørittet | 56 km | Innlandet |
+| Trysil-Knut / Osensjøen Rundt Gravel | 60 km | Innlandet |
+
+### Sykkel — Landevei
+
+| Arrangement | Distance | Region |
+|---|---|---|
+| Styrkeprøven | 540 km | Trøndelag / Innlandet |
+| Jotunheimen Rundt | 430 km | Innlandet / Vestland |
+| Bergen-Voss | 78 km | Vestland |
+| Haugastøl–Bergen | 182 km | Vestland |
+| Nordsjørittet (Egersund–Flekkefjord) | 91 km | Rogaland |
+| Nordsjørittet (Jæren, Egersund–Sandnes) | 88 km | Rogaland |
+| Lysebotn Opp | 14 km | Rogaland |
+| Lysebotn-Bryne Rittet | 147 km | Rogaland |
+| Haugesund-Sauda | 107 km | Rogaland / Vestland |
+| L'Étape Trondheim | 130 km | Trøndelag |
+| Victoriarunden | 120 km | Trøndelag |
+| Tour de Frøya | 44 km | Trøndelag |
+| Nordmarka Rundt | 148 km | Oslo / Viken |
+| Color Line Tour | 210 km | Agder |
+| Tyrifjorden Rundt | 145 km | Viken |
+| Eikerrittet | 90 km | Viken |
+| Randsfjorden Rundt | 152 km | Viken |
+| Mjøsrittet | 167 km | Innlandet |
+| Skjærgårdsrittet | 75 km | Vestland |
+| Tour de Lyngen | 94 km | Troms |
+| Midnattsolrittet | 46 km | Nordland |
+
+### Langrenn, Triathlon & Ultraløp
+
+| Arrangement | Disiplin | Region |
+|---|---|---|
+| Birkebeinerrennet | Langrenn | Innlandet |
+| Holmenkollmarsjen | Langrenn | Oslo |
+| Norseman Xtreme Triathlon | Triathlon | Vestland |
+| *(+ auto-synced Norwegian triathlon events)* | Triathlon | — |
+| *(Norwegian ultra races)* | Ultraløp | — |
 
 ---
 
@@ -87,7 +115,9 @@ bun run lint           # ESLint (type-aware)
 bun run fetch-weather  # refresh src/data/weather-cache.json manually
 ```
 
-The weather cache (`src/data/weather-cache.json`) is also refreshed nightly via GitHub Actions — you only need `fetch-weather` locally if you want fresh historical data before committing.
+The weather cache (`src/data/weather-cache.json`) is refreshed nightly via GitHub Actions — you only need `fetch-weather` locally if you want fresh historical data before committing.
+
+---
 
 ## Project structure
 
@@ -131,17 +161,19 @@ scripts/
   fetch-weather-cache.ts         # Fetches historical data and writes weather-cache.json
 ```
 
+---
+
 ## Tech stack
 
 | | |
 |---|---|
-| Framework | React 19 + TypeScript 6 (strict) |
-| Build | Vite 8, Bun |
-| Routing | react-router-dom v7 |
-| Data fetching | TanStack Query v5 |
-| Map | Leaflet + react-leaflet |
-| PWA | vite-plugin-pwa |
-| Weather API | [Open-Meteo](https://open-meteo.com) (free, no auth) |
+| Framework | ![React](https://img.shields.io/badge/-React_19-61DAFB?logo=react&logoColor=black&style=flat-square) ![TypeScript](https://img.shields.io/badge/-TypeScript_6-3178C6?logo=typescript&logoColor=white&style=flat-square) |
+| Build | ![Vite](https://img.shields.io/badge/-Vite_8-646CFF?logo=vite&logoColor=white&style=flat-square) ![Bun](https://img.shields.io/badge/-Bun-F9F1E1?logo=bun&logoColor=black&style=flat-square) |
+| Routing | ![React Router](https://img.shields.io/badge/-React_Router_v7-CA4245?logo=reactrouter&logoColor=white&style=flat-square) |
+| Data fetching | ![TanStack Query](https://img.shields.io/badge/-TanStack_Query_v5-FF4154?logo=reactquery&logoColor=white&style=flat-square) |
+| Map | ![Leaflet](https://img.shields.io/badge/-Leaflet-199900?logo=leaflet&logoColor=white&style=flat-square) |
+| PWA | ![PWA](https://img.shields.io/badge/-vite--plugin--pwa-5A0FC8?logo=pwa&logoColor=white&style=flat-square) |
+| Weather API | ![Open-Meteo](https://img.shields.io/badge/-Open--Meteo-00B4D8?style=flat-square) — free, no auth required |
 
 ---
 
@@ -175,6 +207,18 @@ scripts/
 
 ---
 
+## Contributing
+
+Contributions are welcome! Here's how to get started:
+
+**Adding a ritt:** Edit `src/data/arrangements.json` — each entry needs an `id`, `name`, `discipline`, `distance`, `elevationGain`, `region`, `officialDate`, and a `waypoints` array with `lat`/`lon`/`altitude` per point. See existing entries for the full schema. Waypoint coordinates should be verified against GPX files or race maps.
+
+**Reporting issues or suggesting events:** Open an issue at [github.com/vegaasen/loypevaer/issues](https://github.com/vegaasen/loypevaer/issues).
+
+**Before submitting a PR:** Run `bun run lint && bun run build` — both must pass. There is no test suite yet.
+
+---
+
 ## Data sources
 
 - Weather: [Open-Meteo](https://open-meteo.com) — free, CORS-friendly, no API key required
@@ -182,3 +226,8 @@ scripts/
 - EQTimer APIs: https://api.eqtiming.com/docs#!/Event
 - Route waypoints: manually curated from maps and race websites
 
+---
+
+## License
+
+[MIT](./LICENSE) © Vegard Aasen
