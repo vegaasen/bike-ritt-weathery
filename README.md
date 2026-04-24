@@ -11,8 +11,6 @@ Pick a Norwegian race, choose a date, and get weather conditions at key waypoint
 ---
 
 <p align="center">
-  <a href="https://github.com/vegaasen/loypevaer/actions/workflows/ci.yml"><img src="https://github.com/vegaasen/loypevaer/actions/workflows/ci.yml/badge.svg" alt="CI" height="28"></a>
-  <a href="https://github.com/vegaasen/loypevaer/actions/workflows/pages.yml"><img src="https://github.com/vegaasen/loypevaer/actions/workflows/pages.yml/badge.svg" alt="Deploy" height="28"></a>
   <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://vitejs.dev"><img src="https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
@@ -20,6 +18,14 @@ Pick a Norwegian race, choose a date, and get weather conditions at key waypoint
   <a href="https://tanstack.com/query"><img src="https://img.shields.io/badge/TanStack_Query-v5-FF4154?style=for-the-badge&logo=reactquery&logoColor=white" alt="TanStack Query"></a>
   <a href="https://open-meteo.com"><img src="https://img.shields.io/badge/Open--Meteo-free_API-00B4D8?style=for-the-badge" alt="Open-Meteo"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen?style=for-the-badge" alt="License"></a>
+</p>
+
+
+---
+
+<p align="center">
+  <a href="https://github.com/vegaasen/loypevaer/actions/workflows/ci.yml"><img src="https://github.com/vegaasen/loypevaer/actions/workflows/ci.yml/badge.svg" alt="CI" height="22"></a>
+  <a href="https://github.com/vegaasen/loypevaer/actions/workflows/pages.yml"><img src="https://github.com/vegaasen/loypevaer/actions/workflows/pages.yml/badge.svg" alt="Deploy" height="22"></a>
 </p>
 
 </div>
