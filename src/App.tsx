@@ -10,6 +10,7 @@ import { usePageTracking } from "./hooks/usePageTracking";
 import "./App.css";
 
 const EventPage = lazy(() => import("./pages/EventPage").then((m) => ({ default: m.EventPage })));
+const GpxPage = lazy(() => import("./pages/GpxPage").then((m) => ({ default: m.GpxPage })));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
 
 const queryClient = new QueryClient({
@@ -30,6 +31,7 @@ function RouterContent() {
         <Routes>
           <Route index element={<HomePage />} />
           <Route path="/arrangement/:id" element={<EventPage />} />
+          <Route path="/gpx" element={<GpxPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

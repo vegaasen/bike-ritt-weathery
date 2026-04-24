@@ -40,6 +40,9 @@ export function NavBar() {
         <Link to="/" className="site-nav__logo">
           Løypevær
         </Link>
+        <Link to="/gpx" className="site-nav__gpx-link">
+          GPX-rute
+        </Link>
         <div className="site-nav__selector">
           <select
             className="site-nav__select"

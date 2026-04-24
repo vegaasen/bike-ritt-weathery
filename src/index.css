@@ -251,6 +251,196 @@ code {
   }
 }
 
+.site-nav__gpx-link {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 6px 4px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  @media (max-width: 600px) {
+    font-size: 13px;
+  }
+}
+
+/* ─── GPX upload page ────────────────────────────────────────────────── */
+
+.gpx-upload {
+  max-width: 640px;
+  margin: 32px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gpx-upload__dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+
+  &:hover,
+  &:focus {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+    outline: none;
+  }
+}
+
+.gpx-upload__icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.gpx-upload__primary {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.gpx-upload__secondary {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.gpx-upload__file-input {
+  display: none;
+}
+
+.gpx-upload__url-row {
+  display: flex;
+  gap: 8px;
+}
+
+.gpx-upload__url-input {
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--bg);
+  color: var(--text-h);
+  transition: border-color 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+}
+
+.gpx-upload__url-btn {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  background: var(--text-h);
+  color: var(--bg);
+  border: 2px solid var(--text-h);
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: transparent;
+    color: var(--text-h);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.gpx-upload__error {
+  color: var(--warning);
+  font-size: 14px;
+  margin: 0;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.gpx-route-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.gpx-route-meta__reset {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 12px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.gpx-waypoint-count {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.gpx-waypoint-count__label {
+  font-size: 14px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.gpx-waypoint-count__slider {
+  flex: 1;
+  max-width: 200px;
+  accent-color: var(--accent);
+}
+
+.gpx-waypoint-count__value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  min-width: 20px;
+  text-align: right;
+}
+
+.ritt-page__subtitle {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin: 4px 0 0;
+}
+
 /* ─── Home page layout ───────────────────────────────────────────────── */
 
 .home-page__hero {

@@ -141,7 +141,7 @@ export function HomePage() {
           <span><strong>{ritt.length}</strong> arrangement totalt</span>
           {totalSykkel > 0 && <span><strong>{totalSykkel}</strong> sykkel</span>}
           {totalLangrenn > 0 && <span><strong>{totalLangrenn}</strong> langrenn</span>}
-          {totalLoping > 0 && <span><strong>{totalLoping}</strong> løping</span>}
+          {totalLoping > 0 && <span><strong>{totalLoping}</strong> ultraløp</span>}
           {totalTriathlon > 0 && <span><strong>{totalTriathlon}</strong> triathlon</span>}
         </div>
       </section>
