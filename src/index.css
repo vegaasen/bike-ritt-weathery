@@ -394,6 +394,17 @@ code {
     font-weight: 500;
     color: var(--text-h);
   }
+
+  & a {
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
 }
 
 .gpx-upload__error {
@@ -404,6 +415,94 @@ code {
   background: color-mix(in srgb, var(--warning) 10%, transparent);
   border-radius: calc(var(--radius) - 2px);
   border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+/* ── How-to guide ─────────────────────────────────────────────── */
+.gpx-howto {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.gpx-howto__toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--accent);
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  transition: background 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+}
+
+.gpx-howto__panel {
+  margin-top: 10px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.gpx-howto__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.gpx-howto__tab {
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 10px 8px;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    color: var(--text-h);
+  }
+}
+
+.gpx-howto__tab--active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-bottom: 2px solid var(--accent);
+}
+
+.gpx-howto__steps {
+  margin: 0;
+  padding: 16px 20px 16px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+
+  & a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  & code {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
 }
 
 .gpx-route-meta {

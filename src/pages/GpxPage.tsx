@@ -46,6 +46,8 @@ export function GpxPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState<string>("");
+  const [howToOpen, setHowToOpen] = useState(false);
+  const [howToPlatform, setHowToPlatform] = useState<"strava" | "garmin" | "komoot">("strava");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -183,8 +185,67 @@ export function GpxPage() {
             </button>
           </div>
           <p className="gpx-upload__hint">
-            Eksporter GPX fra <span>Strava</span>, <span>Garmin Connect</span>, <span>Komoot</span> eller lignende
+            Eksporter GPX fra{" "}
+            <a href="https://www.strava.com" target="_blank" rel="noopener noreferrer">Strava</a>,{" "}
+            <a href="https://connect.garmin.com" target="_blank" rel="noopener noreferrer">Garmin Connect</a>,{" "}
+            <a href="https://www.komoot.com" target="_blank" rel="noopener noreferrer">Komoot</a>{" "}
+            eller lignende
           </p>
+
+          <div className="gpx-howto">
+            <button
+              className="gpx-howto__toggle"
+              onClick={() => setHowToOpen((o) => !o)}
+              aria-expanded={howToOpen}
+            >
+              Slik eksporterer du GPX {howToOpen ? "▴" : "▾"}
+            </button>
+
+            {howToOpen && (
+              <div className="gpx-howto__panel">
+                <div className="gpx-howto__tabs" role="tablist">
+                  {(["strava", "garmin", "komoot"] as const).map((p) => (
+                    <button
+                      key={p}
+                      role="tab"
+                      aria-selected={howToPlatform === p}
+                      className={`gpx-howto__tab${howToPlatform === p ? " gpx-howto__tab--active" : ""}`}
+                      onClick={() => setHowToPlatform(p)}
+                    >
+                      {p === "strava" ? "Strava" : p === "garmin" ? "Garmin Connect" : "Komoot"}
+                    </button>
+                  ))}
+                </div>
+
+                <ol className="gpx-howto__steps">
+                  {howToPlatform === "strava" && (
+                    <>
+                      <li>Gå til <a href="https://www.strava.com/athlete/routes" target="_blank" rel="noopener noreferrer">strava.com/athlete/routes</a> og åpne ruten din</li>
+                      <li>Klikk på <strong>···</strong>-menyen øverst til høyre på ruten</li>
+                      <li>Velg <strong>Eksporter GPX</strong></li>
+                      <li>Last opp den nedlastede <code>.gpx</code>-filen ovenfor</li>
+                    </>
+                  )}
+                  {howToPlatform === "garmin" && (
+                    <>
+                      <li>Gå til <a href="https://connect.garmin.com/modern/courses" target="_blank" rel="noopener noreferrer">connect.garmin.com</a> og åpne kurset ditt</li>
+                      <li>Klikk på tannhjulikonet (<strong>⚙</strong>) ved siden av kurset</li>
+                      <li>Velg <strong>Eksporter som GPX</strong></li>
+                      <li>Last opp den nedlastede <code>.gpx</code>-filen ovenfor</li>
+                    </>
+                  )}
+                  {howToPlatform === "komoot" && (
+                    <>
+                      <li>Gå til <a href="https://www.komoot.com/user/tours" target="_blank" rel="noopener noreferrer">komoot.com</a> og åpne turen din</li>
+                      <li>Klikk på <strong>Del</strong>-knappen øverst på tursiden</li>
+                      <li>Velg <strong>Eksporter som GPX</strong> under nedlastingsalternativene</li>
+                      <li>Last opp den nedlastede <code>.gpx</code>-filen ovenfor</li>
+                    </>
+                  )}
+                </ol>
+              </div>
+            )}
+          </div>
 
           {error && <p className="gpx-upload__error" role="alert">{error}</p>}
         </section>
