@@ -22,7 +22,7 @@ export function SiteFooter() {
         </a>
       </span>
       <span>
-        Laget av{" "}
+        Kokt sammen av{" "}
         <a href="https://www.vegaasen.com" target="_blank" rel="noopener noreferrer">
           Vegard Aasen
         </a>

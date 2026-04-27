@@ -31,7 +31,7 @@ export function parseGpx(xml: string): GpxTrackPoint[] {
     if (isNaN(lat) || isNaN(lon)) return;
     const eleEl = pt.querySelector("ele");
     const ele = eleEl ? parseFloat(eleEl.textContent ?? "") : null;
-    points.push({ lat, lon, ele: isNaN(ele as number) ? null : (ele as number) });
+    points.push({ lat, lon, ele: ele !== null && !isNaN(ele) ? ele : null });
   });
 
   if (points.length === 0) {

@@ -165,7 +165,7 @@ export function GpxPage() {
               tabIndex={-1}
             />
           </div>
-          <p>eller</p>
+          <p className="gpx-upload__divider">eller</p>
           <div className="gpx-upload__url-row">
             <input
               type="url"

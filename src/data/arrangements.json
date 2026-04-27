@@ -834,5 +834,41 @@
       { "label": "75% – Vadstena", "lat": 58.449, "lon": 14.891, "altitude": 90 },
       { "label": "Mål – Motala", "lat": 58.537, "lon": 15.044, "altitude": 90 }
     ]
+  },
+  {
+    "id": "sentrumslopet",
+    "name": "Sentrumsløpet",
+    "discipline": "løping",
+    "officialDate": "2026-05-16",
+    "officialStartTime": "10:00",
+    "distance": 10,
+    "elevationGain": 80,
+    "region": "Oslo",
+    "url": "https://sentrumslopet.no/",
+    "waypoints": [
+      { "label": "Start – Rådhusplassen", "lat": 59.9088, "lon": 10.7344, "altitude": 2 },
+      { "label": "25% – Filipstad", "lat": 59.9105, "lon": 10.7134, "altitude": 5 },
+      { "label": "50% – Aker Brygge", "lat": 59.9083, "lon": 10.7258, "altitude": 3 },
+      { "label": "75% – Jernbanetorget", "lat": 59.9109, "lon": 10.7527, "altitude": 8 },
+      { "label": "Mål – Rådhusplassen", "lat": 59.9088, "lon": 10.7344, "altitude": 2 }
+    ]
+  },
+  {
+    "id": "birkebeinerlopet",
+    "name": "Birkebeinerløpet",
+    "discipline": "løping",
+    "officialDate": "2026-08-22",
+    "officialStartTime": "10:00",
+    "distance": 54,
+    "elevationGain": 1000,
+    "region": "Innlandet",
+    "url": "https://birkebeiner.no/lopet/",
+    "waypoints": [
+      { "label": "Start – Rena", "lat": 61.133, "lon": 11.377, "altitude": 256 },
+      { "label": "25% – Ørnkleiva", "lat": 61.08, "lon": 11.18, "altitude": 580 },
+      { "label": "50% – Kvarstad", "lat": 61.17, "lon": 10.82, "altitude": 730 },
+      { "label": "75% – Sjusjøen", "lat": 61.248, "lon": 10.578, "altitude": 900 },
+      { "label": "Mål – Lillehammer", "lat": 61.115, "lon": 10.466, "altitude": 185 }
+    ]
   }
 ]

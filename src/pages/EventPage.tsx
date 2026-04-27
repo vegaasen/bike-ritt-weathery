@@ -15,6 +15,7 @@ import { SITE_URL, disciplineToSport } from "../lib/seo";
 import { useMyEvents } from "../hooks/useMyEvents";
 import { useWeather } from "../hooks/useWeather";
 import { calcWaypointTimes, WAYPOINT_FRACTIONS } from "../lib/timing";
+import { isForecastRange } from "../lib/weather";
 import { ShareButton } from "../components/ShareButton";
 
 export function EventPage() {
@@ -137,6 +138,8 @@ export function EventPage() {
       ? scoreToLabel(physicalScore(rittData.distance, elevationGain!) + weatherAdj)
       : null;
 
+  const forecastOnly = rittData?.discipline === "løping";
+
   return (
     <div className="ritt-page">
       <Helmet>
@@ -173,7 +176,9 @@ export function EventPage() {
           })}
         </script>
       </Helmet>
-      <Link to="/" className="ritt-page__back-link">← Alle arrangement</Link>
+      <Link to={forecastOnly ? "/lop" : "/"} className="ritt-page__back-link">
+        ← {forecastOnly ? "Alle løp" : "Alle arrangement"}
+      </Link>
       <header className="ritt-page__header">
         <h1>{rittData.name}</h1>
         <div className="ritt-page__meta">
@@ -185,7 +190,7 @@ export function EventPage() {
               ↑ {elevationGain} m
             </span>
           )}
-          {physDifficulty && (
+          {!forecastOnly && physDifficulty && (
             <span
               className={`ritt-page__meta-item ritt-page__difficulty-badge ritt-page__difficulty-badge--${physDifficulty.level}`}
             >
@@ -225,9 +230,11 @@ export function EventPage() {
         <EventMap waypoints={rittData.waypoints} name={rittData.name} discipline={rittData.discipline} />
       </section>
 
-      <section className="ritt-page__elevation-section">
-        <ElevationProfile waypoints={rittData.waypoints} distanceKm={rittData.distance} />
-      </section>
+      {!forecastOnly && (
+        <section className="ritt-page__elevation-section">
+          <ElevationProfile waypoints={rittData.waypoints} distanceKm={rittData.distance} />
+        </section>
+      )}
 
       <section className="ritt-page__date-section">
         <DatePicker
@@ -257,14 +264,20 @@ export function EventPage() {
             </p>
           }
         >
-          <WeatherStrip
-            waypoints={rittData.waypoints}
-            date={selectedDate || null}
-            startTime={startTime || null}
-            finishTime={finishTime || null}
-            externalResults={weatherResults}
-          />
-          {selectedDate && (
+          {forecastOnly && selectedDate && !isForecastRange(selectedDate) ? (
+            <p className="ritt-page__forecast-only-note">
+              Værmeldingen er ikke klar ennå — sjekk igjen nærmere løpsdagen.
+            </p>
+          ) : (
+            <WeatherStrip
+              waypoints={rittData.waypoints}
+              date={selectedDate || null}
+              startTime={startTime || null}
+              finishTime={finishTime || null}
+              externalResults={weatherResults}
+            />
+          )}
+          {!forecastOnly && selectedDate && (
             <>
               {adjDifficulty && physDifficulty && (
                 <div className="dag-vurdering">
@@ -296,12 +309,14 @@ export function EventPage() {
         </ErrorBoundary>
       </section>
 
-      <section className="ritt-page__history-section">
-        <HistoricalWeatherTable
-          waypoints={rittData.waypoints}
-          officialDate={rittData.officialDate}
-        />
-      </section>
+      {!forecastOnly && (
+        <section className="ritt-page__history-section">
+          <HistoricalWeatherTable
+            waypoints={rittData.waypoints}
+            officialDate={rittData.officialDate}
+          />
+        </section>
+      )}
     </div>
   );
 }

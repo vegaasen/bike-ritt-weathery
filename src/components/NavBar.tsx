@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { allArrangements as ritt, getNextRitt, type Discipline, type RittEntry } from "../lib/arrangements";
+
+import { allArrangements as ritt, type Discipline, type RittEntry } from "../lib/arrangements";
 import { DISCIPLINE_LABEL_WITH_EMOJI } from "../lib/disciplines";
 
 type Race = RittEntry;
@@ -13,14 +14,15 @@ function groupByDiscipline(races: Race[]): Map<Discipline, Race[]> {
   const grouped = new Map<Discipline, Race[]>();
   for (const discipline of DISCIPLINE_ORDER) grouped.set(discipline, []);
   for (const race of sorted) {
-    grouped.get(race.discipline)!.push(race);
+    if (grouped.has(race.discipline)) {
+      grouped.get(race.discipline)!.push(race);
+    }
   }
   return grouped;
 }
 
-// Computed once at module load — both are derived from static ritt data.
+// Computed once at module load — derived from static ritt data.
 const grouped = groupByDiscipline(ritt);
-const nextId = getNextRitt(ritt)?.id ?? ritt[0]?.id ?? "";
 
 export function NavBar() {
   const navigate = useNavigate();
@@ -28,6 +30,8 @@ export function NavBar() {
 
   const match = location.pathname.match(/^\/arrangement\/([^/]+)/);
   const currentId = match ? match[1] : "";
+  const isLopPage = location.pathname.startsWith("/lop");
+  const isGpxPage = location.pathname.startsWith("/gpx");
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value;
@@ -41,8 +45,15 @@ export function NavBar() {
           Løypevær
         </Link>
         <div className="site-nav__selector">
-          <Link to="/gpx" className="site-nav__gpx-link">
-            Egen løype
+          <Link
+            to="/lop"
+            className={`site-nav__gpx-link${isLopPage ? " site-nav__gpx-link--active" : ""}`}
+          >
+            Kortere løp
+          </Link>
+          <span className="site-nav__divider" aria-hidden="true" />
+          <Link to="/gpx" className={`site-nav__gpx-link${isGpxPage ? " site-nav__gpx-link--active" : ""}`}>
+            Din egen løype
           </Link>
           <span className="site-nav__divider" aria-hidden="true" />
           <select
@@ -64,11 +75,6 @@ export function NavBar() {
               </optgroup>
             ))}
           </select>
-          {nextId && (
-            <Link to={`/arrangement/${nextId}`} className="site-nav__cta">
-              Sjekk været →
-            </Link>
-          )}
         </div>
       </nav>
     </div>

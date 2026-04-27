@@ -65,6 +65,7 @@ export function HomePage() {
   const filtered = useMemo(
     () =>
       ritt
+        .filter((r) => r.discipline !== "løping")
         .filter((r) => discipline === "alle" || r.discipline === discipline)
         .filter((r) => !searchQuery || r.name.toLowerCase().includes(searchQuery) || r.region.toLowerCase().includes(searchQuery)),
     [discipline, searchQuery]
@@ -336,6 +337,21 @@ export function HomePage() {
         })}
       </main>
 
+      {/* ── Løping teaser ─────────────────────────────────────────────── */}
+      <section className="home-page__lop-teaser">
+        <div className="home-page__lop-teaser-text">
+          <div className="home-page__feature-eyebrow">Løping</div>
+          <h2>Kortere løp fortjener like godt værvarsel.</h2>
+          <p>
+            Vi holder også oversikt over kortere løp som Sentrumsløpet og Birkebeinerløpet.
+            Her viser vi kun sanntidsvarsler — ingen historikk, bare aktuelt vær for løpsdagen.
+          </p>
+        </div>
+        <Link to="/lop" className="home-page__lop-teaser-btn">
+          Kortere løp →
+        </Link>
+      </section>
+
       {/* ── CTA banner ────────────────────────────────────────────────── */}
       {nextRitt && (
         <div className="home-page__cta-banner">
@@ -352,7 +368,7 @@ export function HomePage() {
               Sjekk været nå →
             </Link>
             <span className="home-page__cta-banner-meta">
-              Helt gratis · Ingen innlogging
+              Oppdateres daglig · Værdata for hele løypa
             </span>
           </div>
         </div>
