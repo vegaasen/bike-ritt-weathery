@@ -839,7 +839,7 @@
     "id": "sentrumslopet",
     "name": "Sentrumsløpet",
     "discipline": "løping",
-    "officialDate": "2026-05-16",
+    "officialDate": "2026-04-25",
     "officialStartTime": "10:00",
     "distance": 10,
     "elevationGain": 80,
@@ -857,18 +857,18 @@
     "id": "birkebeinerlopet",
     "name": "Birkebeinerløpet",
     "discipline": "løping",
-    "officialDate": "2026-08-22",
-    "officialStartTime": "10:00",
-    "distance": 54,
-    "elevationGain": 1000,
+    "officialDate": "2026-06-13",
+    "officialStartTime": "11:00",
+    "distance": 21,
+    "elevationGain": 337,
     "region": "Innlandet",
-    "url": "https://birkebeiner.no/lopet/",
+    "url": "https://birken.no/no/lopebirken/birkebeinerlopet-21-km",
     "waypoints": [
-      { "label": "Start – Rena", "lat": 61.133, "lon": 11.377, "altitude": 256 },
-      { "label": "25% – Ørnkleiva", "lat": 61.08, "lon": 11.18, "altitude": 580 },
-      { "label": "50% – Kvarstad", "lat": 61.17, "lon": 10.82, "altitude": 730 },
-      { "label": "75% – Sjusjøen", "lat": 61.248, "lon": 10.578, "altitude": 900 },
-      { "label": "Mål – Lillehammer", "lat": 61.115, "lon": 10.466, "altitude": 185 }
+      { "label": "Start – Birkebeineren Skistadion", "lat": 61.1678, "lon": 10.5353, "altitude": 525 },
+      { "label": "~25% – Sjøseterlia", "lat": 61.148, "lon": 10.520, "altitude": 611 },
+      { "label": "~50% – Mesnasaga", "lat": 61.131, "lon": 10.510, "altitude": 370 },
+      { "label": "~75% – Kroken", "lat": 61.120, "lon": 10.492, "altitude": 240 },
+      { "label": "Mål – Håkons Hall, Lillehammer", "lat": 61.117, "lon": 10.460, "altitude": 200 }
     ]
   }
 ]
