@@ -192,6 +192,10 @@ code {
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
 }
 
 .site-nav__select {
@@ -277,6 +281,109 @@ code {
   height: 18px;
   background: var(--border);
   flex-shrink: 0;
+}
+
+/* ─── Hamburger button (mobile only) ───────────────────────────────── */
+
+.site-nav__hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+
+  span {
+    display: block;
+    width: 16px;
+    height: 2px;
+    background: var(--text-h);
+    border-radius: 2px;
+    transition: transform 0.2s, opacity 0.2s;
+    transform-origin: center;
+  }
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+
+  @media (max-width: 600px) {
+    display: flex;
+  }
+}
+
+.site-nav__hamburger--open {
+  border-color: var(--accent);
+
+  span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+}
+
+/* ─── Mobile dropdown menu ──────────────────────────────────────────── */
+
+.site-nav__mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  background: var(--bg);
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: var(--shadow-warm);
+
+  @media (max-width: 600px) {
+    display: flex;
+  }
+}
+
+.site-nav__mobile-link {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: calc(var(--radius) - 4px);
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    background: var(--accent-bg);
+    color: var(--accent);
+  }
+}
+
+.site-nav__mobile-link--active {
+  color: var(--accent) !important;
+  background: var(--accent-bg);
+}
+
+.site-nav__mobile-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.site-nav__mobile-select {
+  max-width: 100% !important;
+  font-size: 15px !important;
 }
 
 .gpx-upload {
